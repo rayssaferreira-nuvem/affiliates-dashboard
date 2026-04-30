@@ -155,11 +155,14 @@ tr:hover td{background:#faf9f6}
   <div class="sep"></div>
   <label>KPI</label>
   <select id="kpiSel" onchange="applyFilter()">
+    <option value="qtd_conteudos">Qtd. conteúdos publicados</option>
+    <option value="prospeccao">Prospecção em andamento</option>
+    <option value="novos_parc">Novos parceiros ativos</option>
+    <option value="parceiros">Parceiros carteira</option>
+    <option value="sessoes">Sessões (Conteúdo)</option>
     <option value="trials_c">Trials (Conteúdo)</option>
     <option value="nps_c">NPs (Conteúdo)</option>
     <option value="nss_c">NSs (Conteúdo)</option>
-    <option value="parceiros">Parceiros carteira</option>
-    <option value="sessoes">Sessões</option>
     <option value="cadastrados">Cadastrados (Padrão)</option>
     <option value="comissionados">Comissionados acum.</option>
     <option value="trials_p">Trials (Padrão)</option>
@@ -323,36 +326,71 @@ tr:hover td{background:#faf9f6}
 
 <!-- ═══ TAB 5: PARTNERS ═══ -->
 <div id="main5" style="display:none">
-  <div class="partner-controls">
+
+  <!-- FILTER BAR -->
+  <div class="filterbar" style="flex-wrap:wrap;gap:10px;margin-bottom:10px">
     <label>Classificação</label>
     <select id="partnerClass" onchange="renderPartners()">
       <option value="todos">Todas</option>
     </select>
+    <div style="width:1px;height:22px;background:#e8e6df"></div>
+    <label>Parceiro</label>
+    <input type="text" id="partnerSearch" placeholder="Buscar parceiro..." style="min-width:160px;font-size:11.5px;padding:5px 8px;border:1px solid #d3d1c7;border-radius:7px;background:#faf9f6" oninput="renderPartners()">
+    <div style="width:1px;height:22px;background:#e8e6df"></div>
     <label>Ordenar por</label>
     <select id="partnerSort" onchange="renderPartners()">
       <option value="total">Total NPs</option>
       <option value="last">Última semana</option>
-      <option value="name">Nome</option>
+      <option value="best">Melhor semana</option>
+      <option value="avg">Média/sem</option>
+      <option value="name">Nome A-Z</option>
     </select>
-    <label>Mín. NPs total</label>
-    <input type="number" id="partnerMin" value="0" min="0" style="width:70px" onchange="renderPartners()">
+    <div style="width:1px;height:22px;background:#e8e6df"></div>
+    <label>Mín. NPs</label>
+    <input type="number" id="partnerMin" value="0" min="0" style="width:65px;font-size:11.5px;padding:5px 8px;border:1px solid #d3d1c7;border-radius:7px;background:#faf9f6" onchange="renderPartners()">
+    <label>Máx. mostrar</label>
+    <select id="partnerLimit" onchange="renderPartners()">
+      <option value="0">Todos</option>
+      <option value="10">Top 10</option>
+      <option value="20">Top 20</option>
+      <option value="50">Top 50</option>
+    </select>
   </div>
+
+  <!-- SUMMARY CARDS -->
+  <div class="g4" id="partnerCards" style="margin-bottom:12px"></div>
+
+  <!-- HEATMAP -->
   <div class="panel">
-    <div class="plbl">Heatmap — NPs por parceiro por semana</div>
-    <div class="hint">Intensidade = volume de NPs · valores absolutos em cada célula</div>
-    <div class="tw"><table class="pt" id="partnerHeatmap"></table></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <div class="plbl" style="margin:0">Heatmap — NPs por parceiro por semana</div>
+      <div style="font-size:11px;color:#888780">
+        <span style="background:rgba(29,158,117,.5);padding:2px 8px;border-radius:3px;color:#fff;margin-right:5px">▲ Crescimento</span>
+        <span style="background:rgba(216,90,48,.5);padding:2px 8px;border-radius:3px;color:#fff;margin-right:5px">▼ Queda</span>
+        <span style="background:#f0ede6;padding:2px 8px;border-radius:3px;color:#aaa9a5;margin-right:5px">● Zero</span>
+        <span style="background:#f5f4f0;padding:2px 8px;border-radius:3px;color:#888780">= Igual</span>
+      </div>
+    </div>
+    <div style="overflow-x:auto;overflow-y:auto;max-height:420px;position:relative">
+      <table class="pt" id="partnerHeatmap" style="min-width:max-content"></table>
+    </div>
   </div>
-  <div class="panel" style="margin-top:14px">
-    <div class="plbl">Ranking de parceiros — NPs acumulados</div>
-    <div class="tw"><table class="pt" id="partnerRanking"></table></div>
+
+  <!-- RANKING -->
+  <div class="panel" style="margin-top:12px">
+    <div class="plbl">Ranking — NPs acumulados por parceiro</div>
+    <div style="overflow-x:auto">
+      <table class="pt" id="partnerRanking"></table>
+    </div>
   </div>
+
 </div>
 
 </div><!-- /shell -->
 <script>
 const GAS='https://script.google.com/macros/s/AKfycbz5TwFg7kX51qqjX2_xLWNFP-qBP4NvYcb3OGR-sf2ulogmMVwj63omWyK_pJJcCoIG/exec';
-const CI={mes:0,semana:1,trials_c:11,nps_c:12,nss_c:13,parceiros:9,sessoes:10,cadastrados:14,comissionados:15,trials_p:18,nps_p:19,nss_p:20};
-const CM={semana:1,tgt_trials_c:10,tgt_nps_c:11,tgt_nss_c:12,tgt_parceiros:8,tgt_sessoes:9,tgt_cadastrados:13,tgt_comissionados:14,tgt_trials_p:15,tgt_nps_p:16,tgt_nss_p:17};
+const CI={mes:0,semana:1,qtd_conteudos:5,reativacao:6,prospeccao:7,novos_parc:8,parceiros:9,sessoes:10,trials_c:11,nps_c:12,nss_c:13,cadastrados:14,comissionados:15,trials_p:18,nps_p:19,nss_p:20};
+const CM={semana:1,tgt_qtd_conteudos:5,tgt_prospeccao:6,tgt_novos_parc:7,tgt_parceiros:8,tgt_sessoes:9,tgt_trials_c:10,tgt_nps_c:11,tgt_nss_c:12,tgt_cadastrados:13,tgt_comissionados:14,tgt_trials_p:15,tgt_nps_p:16,tgt_nss_p:17};
 
 /* ── METAS MENSAIS FIXAS (Metas_Gerais) ── */
 // Índice: 0=jan,1=fev,2=mar,3=abr,4=mai,5=jun,6=jul,7=ago,8=set,9=out,10=nov,11=dez
@@ -443,13 +481,18 @@ function buildFull(inputAll,metasAll){
   FULL.weeks=iUniq.map(r=>`S${String(r[CI.semana]).trim()} ${(String(r[CI.mes]||'').trim().charAt(0).toUpperCase()+String(r[CI.mes]||'').trim().slice(1,3))}`);
   FULL.months=iUniq.map(r=>String(r[CI.mes]||'').trim().toLowerCase());
   const N=FULL.weeks.length,gI=col=>iUniq.slice(0,N).map(r=>num(r[col]));
-  FULL.dc={tc:gI(CI.trials_c),nc:gI(CI.nps_c),sc:gI(CI.nss_c),tp:gI(CI.trials_p),np:gI(CI.nps_p),sp:gI(CI.nss_p),sess:gI(CI.sessoes),parc:gI(CI.parceiros),cadas:gI(CI.cadastrados),comis:gI(CI.comissionados)};
+  FULL.dc={tc:gI(CI.trials_c),nc:gI(CI.nps_c),sc:gI(CI.nss_c),tp:gI(CI.trials_p),np:gI(CI.nps_p),sp:gI(CI.nss_p),sess:gI(CI.sessoes),parc:gI(CI.parceiros),cadas:gI(CI.cadastrados),comis:gI(CI.comissionados),qtd:gI(CI.qtd_conteudos),prosp:gI(CI.prospeccao),novparc:gI(CI.novos_parc)};
   // Metas Diarias: uma linha por DIA com valor diário
   // Meta semanal = valor_diário × número_de_dias_naquela_semana
   const mmRaw={};
   for(const r of metasAll.slice(1)){
-    const s=String(r[CM.semana]||'').trim();
-    if(s&&!isNaN(Number(s))&&Number(s)>0){if(!mmRaw[s])mmRaw[s]=[];mmRaw[s].push(r);}
+    const raw=r[CM.semana];
+    const n=Number(raw);
+    if(!isNaN(n)&&n>0){
+      const s=String(Math.round(n)); // normalize: 1.0 → "1"
+      if(!mmRaw[s])mmRaw[s]=[];
+      mmRaw[s].push(r);
+    }
   }
   const mm={};
   for(const [s,rows] of Object.entries(mmRaw)){
@@ -466,23 +509,26 @@ function buildFull(inputAll,metasAll){
     mm[s]=weekly;
   }
   // tgt_weekly: valor diário × dias da semana — usado nos gráficos semanais do tracker
-  const gM = col => iUniq.map(r => mm[String(r[CI.semana]).trim()] ? num(mm[String(r[CI.semana]).trim()][col]) : null);
+  const gM = col => iUniq.map(r => { const k=String(Math.round(Number(r[CI.semana]))||0); return mm[k]?num(mm[k][col]):null; });
   const weeklyTgt = col => gM(col);
 
   // tgt_monthly: from MT (Metas_Gerais) — used for monthly summary cards & accumulated totals
   const monthlyTgt = (kpi) => iUniq.map(r => getMT(kpi, String(r[CI.mes]||'').trim()));
 
   FULL.kpis={
-    trials_c:    {label:'Trials (Conteúdo)',  real:FULL.dc.tc,   tgt:weeklyTgt(CM.tgt_trials_c),   tgtM:monthlyTgt('trials_c')},
-    nps_c:       {label:'NPs (Conteúdo)',     real:FULL.dc.nc,   tgt:weeklyTgt(CM.tgt_nps_c),      tgtM:monthlyTgt('nps_c')},
-    nss_c:       {label:'NSs (Conteúdo)',     real:FULL.dc.sc,   tgt:weeklyTgt(CM.tgt_nss_c),      tgtM:monthlyTgt('nss_c')},
-    parceiros:   {label:'Parceiros',          real:FULL.dc.parc, tgt:weeklyTgt(CM.tgt_parceiros),  tgtM:monthlyTgt('parceiros_c')},
-    sessoes:     {label:'Sessões',            real:FULL.dc.sess, tgt:null,                          tgtM:iUniq.map(r=>getMT('sessoes_c',String(r[CI.mes]||'').trim()))},
-    cadastrados: {label:'Cadastrados',        real:FULL.dc.cadas,tgt:weeklyTgt(CM.tgt_cadastrados),tgtM:monthlyTgt('cadastrados')},
-    comissionados:{label:'Comissionados',     real:FULL.dc.comis,tgt:weeklyTgt(CM.tgt_comissionados),tgtM:monthlyTgt('comissionados')},
-    trials_p:    {label:'Trials (Padrão)',    real:FULL.dc.tp,   tgt:weeklyTgt(CM.tgt_trials_p),   tgtM:monthlyTgt('trials_p')},
-    nps_p:       {label:'NPs (Padrão)',       real:FULL.dc.np,   tgt:weeklyTgt(CM.tgt_nps_p),      tgtM:monthlyTgt('nps_p')},
-    nss_p:       {label:'NSs (Padrão)',       real:FULL.dc.sp,   tgt:weeklyTgt(CM.tgt_nss_p),      tgtM:monthlyTgt('nss_p')},
+    qtd_conteudos:{label:'Qtd. conteúdos publicados', real:gI(CI.qtd_conteudos), tgt:weeklyTgt(CM.tgt_qtd_conteudos), tgtM:null},
+    prospeccao:   {label:'Prospecção em andamento',    real:gI(CI.prospeccao),    tgt:weeklyTgt(CM.tgt_prospeccao),    tgtM:null},
+    novos_parc:   {label:'Novos parceiros ativos',     real:gI(CI.novos_parc),    tgt:weeklyTgt(CM.tgt_novos_parc),    tgtM:null},
+    parceiros:    {label:'Parceiros carteira',         real:FULL.dc.parc, tgt:weeklyTgt(CM.tgt_parceiros),   tgtM:monthlyTgt('parceiros_c')},
+    sessoes:      {label:'Sessões (Conteúdo)',         real:FULL.dc.sess, tgt:weeklyTgt(CM.tgt_sessoes),     tgtM:iUniq.map(r=>getMT('sessoes_c',String(r[CI.mes]||'').trim()))},
+    trials_c:     {label:'Trials (Conteúdo)',          real:FULL.dc.tc,   tgt:weeklyTgt(CM.tgt_trials_c),   tgtM:monthlyTgt('trials_c')},
+    nps_c:        {label:'NPs (Conteúdo)',             real:FULL.dc.nc,   tgt:weeklyTgt(CM.tgt_nps_c),      tgtM:monthlyTgt('nps_c')},
+    nss_c:        {label:'NSs (Conteúdo)',             real:FULL.dc.sc,   tgt:weeklyTgt(CM.tgt_nss_c),      tgtM:monthlyTgt('nss_c')},
+    cadastrados:  {label:'Cadastrados (Padrão)',       real:FULL.dc.cadas,tgt:weeklyTgt(CM.tgt_cadastrados),tgtM:monthlyTgt('cadastrados')},
+    comissionados:{label:'Comissionados acum.',        real:FULL.dc.comis,tgt:weeklyTgt(CM.tgt_comissionados),tgtM:monthlyTgt('comissionados')},
+    trials_p:     {label:'Trials (Padrão)',            real:FULL.dc.tp,   tgt:weeklyTgt(CM.tgt_trials_p),   tgtM:monthlyTgt('trials_p')},
+    nps_p:        {label:'NPs (Padrão)',               real:FULL.dc.np,   tgt:weeklyTgt(CM.tgt_nps_p),      tgtM:monthlyTgt('nps_p')},
+    nss_p:        {label:'NSs (Padrão)',               real:FULL.dc.sp,   tgt:weeklyTgt(CM.tgt_nss_p),      tgtM:monthlyTgt('nss_p')},
   };
   // CVR targets from MT (monthly, stable)
   FULL.tgt.mnc = iUniq.map(r => getMT('cvr_np_c',  String(r[CI.mes]||'').trim()));
@@ -580,8 +626,8 @@ function applyFilter(){
   }
   F.weeks=FULL.weeks.slice(from,to+1);
   F.months=FULL.months.slice(from,to+1);
-  const sl=k=>FULL.dc[k].slice(from,to+1);
-  F.dc={tc:sl('tc'),nc:sl('nc'),sc:sl('sc'),tp:sl('tp'),np:sl('np'),sp:sl('sp'),sess:sl('sess'),parc:sl('parc'),cadas:sl('cadas'),comis:sl('comis')};
+  const sl=k=>FULL.dc[k]?FULL.dc[k].slice(from,to+1):[];
+  F.dc={tc:sl('tc'),nc:sl('nc'),sc:sl('sc'),tp:sl('tp'),np:sl('np'),sp:sl('sp'),sess:sl('sess'),parc:sl('parc'),cadas:sl('cadas'),comis:sl('comis'),qtd:sl('qtd'),prosp:sl('prosp'),novparc:sl('novparc')};
   const slK=k=>({label:FULL.kpis[k].label,real:FULL.kpis[k].real.slice(from,to+1),tgt:FULL.kpis[k].tgt?(FULL.kpis[k].tgt.slice(from,to+1)):null,tgtM:FULL.kpis[k].tgtM?(FULL.kpis[k].tgtM.slice(from,to+1)):null});
   Object.keys(FULL.kpis).forEach(k=>F.kpis[k]=slK(k));
   F.tgt={mnc:FULL.tgt.mnc.slice(from,to+1),msc:FULL.tgt.msc.slice(from,to+1),mnp:FULL.tgt.mnp.slice(from,to+1),msp:FULL.tgt.msp.slice(from,to+1)};
@@ -1152,13 +1198,15 @@ function buildPartners(rows){
 
 function renderPartners(){
   if(!PARTNERS.data||Object.keys(PARTNERS.data).length===0){
-    document.getElementById('partnerHeatmap').innerHTML='<tr><td>Nenhum dado de parceiros carregado</td></tr>';
+    document.getElementById('partnerHeatmap').innerHTML='<tr><td>Nenhum dado de parceiros carregado. Verifique se a aba Partners_NPs está acessível.</td></tr>';
     document.getElementById('partnerRanking').innerHTML='';
     return;
   }
   const clsFilter=document.getElementById('partnerClass')?.value||'todos';
   const sortBy=document.getElementById('partnerSort')?.value||'total';
   const minNPs=parseInt(document.getElementById('partnerMin')?.value)||0;
+  const limit=parseInt(document.getElementById('partnerLimit')?.value)||0;
+  const search=(document.getElementById('partnerSearch')?.value||'').toLowerCase().trim();
 
   // Filter weeks to match current F filter
   const wIdxs=FULL.weeks.map((w,i)=>F.weeks.includes(w)?i:-1).filter(i=>i>=0);
@@ -1166,43 +1214,105 @@ function renderPartners(){
 
   // Build partner list
   let partners=Object.entries(PARTNERS.data)
-    .filter(([n,d])=>clsFilter==='todos'||d.cls===clsFilter)
+    .filter(([n,d])=>{
+      if(clsFilter!=='todos'&&d.cls!==clsFilter) return false;
+      if(search&&!n.toLowerCase().includes(search)) return false;
+      return true;
+    })
     .map(([nivel,d])=>{
       const weekly=wIdxs.map(i=>d.weekly[i]||0);
       const total=weekly.reduce((s,v)=>s+v,0);
       const last=weekly[weekly.length-1]||0;
-      return{nivel,cls:d.cls,weekly,total,last};
+      const best=Math.max(...weekly);
+      const active=weekly.filter(v=>v>0).length;
+      const avg=active>0?(total/active):0;
+      return{nivel,cls:d.cls,weekly,total,last,best,active,avg};
     })
     .filter(p=>p.total>=minNPs);
 
   // Sort
   if(sortBy==='total') partners.sort((a,b)=>b.total-a.total);
   else if(sortBy==='last') partners.sort((a,b)=>b.last-a.last);
+  else if(sortBy==='best') partners.sort((a,b)=>b.best-a.best);
+  else if(sortBy==='avg') partners.sort((a,b)=>b.avg-a.avg);
   else partners.sort((a,b)=>a.nivel.localeCompare(b.nivel));
 
-  // Heatmap color scale
+  // Apply limit
+  const totalPartners=partners.length;
+  if(limit>0) partners=partners.slice(0,limit);
+
+  // Heatmap: color = growth/decline vs previous week, value = absolute NPs
+  // Find max absolute value for intensity scaling
   const allVals=partners.flatMap(p=>p.weekly).filter(v=>v>0);
   const maxV=allVals.length?Math.max(...allVals):1;
-  function phcls(v){
-    if(!v||v===0)return'ph0';
-    const r=v/maxV;
-    if(r>=0.8)return'ph5';if(r>=0.6)return'ph4';if(r>=0.4)return'ph3';if(r>=0.2)return'ph2';return'ph1';
+
+  function phcls(v, prev){
+    if(v==null||v===0) return 'ph0'; // zero — grey
+    if(prev==null||prev===0){
+      // first week with data — just show intensity (green)
+      const r=v/maxV;
+      if(r>=0.8)return'phg5';if(r>=0.6)return'phg4';if(r>=0.4)return'phg3';if(r>=0.2)return'phg2';return'phg1';
+    }
+    if(v===prev) return 'pheq'; // same as previous — neutral
+    const diff=v-prev;
+    const intensity=Math.abs(diff)/maxV;
+    if(diff>0){
+      // growth — green
+      if(intensity>=0.15)return'phg5';if(intensity>=0.10)return'phg4';if(intensity>=0.06)return'phg3';if(intensity>=0.03)return'phg2';return'phg1';
+    } else {
+      // decline — red
+      if(intensity>=0.15)return'phr5';if(intensity>=0.10)return'phr4';if(intensity>=0.06)return'phr3';if(intensity>=0.03)return'phr2';return'phr1';
+    }
   }
 
-  // Heatmap table
-  let hdr='<tr><th style="text-align:left">Parceiro</th><th style="text-align:left">Classificação</th>';
-  wLabels.forEach(w=>hdr+=`<th>${w.split(' ')[0]}</th>`);
-  hdr+='<th class="total-col">Total</th></tr>';
+  // Summary cards
+  const grandTotal=partners.reduce((s,p)=>s+p.total,0);
+  const activePartners=partners.filter(p=>p.total>0).length;
+  const lastWeekTotal=partners.reduce((s,p)=>s+p.last,0);
+  const prevWeekTotal=partners.reduce((s,p)=>s+(p.weekly[p.weekly.length-2]||0),0);
+  const wow=prevWeekTotal>0?((lastWeekTotal/prevWeekTotal-1)*100):null;
+  const cls2=v=>v==null?'neu':v>=0?'pos':'neg';
+  document.getElementById('partnerCards').innerHTML=`
+    <div class="mc"><div class="mc-l">Parceiros (${totalPartners} total)</div><div class="mc-v">${activePartners}</div><div class="mc-s neu">com NPs no período</div></div>
+    <div class="mc"><div class="mc-l">Total NPs período</div><div class="mc-v">${fmt(grandTotal)}</div></div>
+    <div class="mc"><div class="mc-l">NPs última semana</div><div class="mc-v">${fmt(lastWeekTotal)}</div><div class="mc-s ${cls2(wow)}">${wow!=null?(wow>=0?'+':'')+wow.toFixed(1)+'% vs sem. ant.':''}</div></div>
+    <div class="mc"><div class="mc-l">Média NPs/parceiro</div><div class="mc-v">${activePartners>0?(grandTotal/activePartners).toFixed(1):'—'}</div></div>
+  `;
+
+  // Heatmap table — sticky first col, horizontal scroll
+  let hdr='<tr><th style="text-align:left;position:sticky;left:0;z-index:2;background:#faf9f6">#</th><th style="text-align:left;position:sticky;left:32px;z-index:2;background:#faf9f6;min-width:140px">Parceiro</th><th style="text-align:left;position:sticky;left:172px;z-index:2;background:#faf9f6;min-width:120px">Classificação</th>';
+  wLabels.forEach(w=>hdr+=`<th style="min-width:52px">${w.split(' ')[0]}</th>`);
+  hdr+='<th class="total-col" style="position:sticky;right:0;background:#fafcff;min-width:60px">Total</th></tr>';
 
   let rows='';
   partners.forEach((p,i)=>{
     rows+=`<tr>
-      <td><span class="rank">${i+1}</span> ${p.nivel}</td>
-      <td>${p.cls}</td>
-      ${p.weekly.map(v=>`<td class="${phcls(v)}">${v>0?v:''}</td>`).join('')}
-      <td class="total-col">${p.total}</td>
+      <td style="position:sticky;left:0;background:#fff;z-index:1;color:#aaa9a5;font-size:10px;width:32px">${i+1}</td>
+      <td style="position:sticky;left:32px;background:#fff;z-index:1;min-width:140px;font-weight:500">${p.nivel}</td>
+      <td style="position:sticky;left:172px;background:#fff;z-index:1;min-width:120px;color:#888780;font-size:11px">${p.cls}</td>
+      ${p.weekly.map((v,j)=>{
+        const prev=j>0?p.weekly[j-1]:null;
+        const cls=phcls(v,prev);
+        return `<td class="${cls}" style="text-align:center;min-width:52px" title="${p.nivel} | ${wLabels[j]} | NPs: ${v}${prev!=null?' | sem.ant: '+prev:''}">${v>0?v:''}</td>`;
+      }).join('')}
+      <td class="total-col" style="position:sticky;right:0;text-align:center;font-weight:600">${p.total}</td>
     </tr>`;
   });
+
+  // Total row
+  const weekTotals=wLabels.map((_,j)=>partners.reduce((s,p)=>s+(p.weekly[j]||0),0));
+  rows+=`<tr style="border-top:2px solid #e8e6df;font-weight:700;background:#f0f4ff">
+    <td style="position:sticky;left:0;background:#f0f4ff;z-index:1"></td>
+    <td style="position:sticky;left:32px;background:#f0f4ff;z-index:1;font-weight:700">TOTAL</td>
+    <td style="position:sticky;left:172px;background:#f0f4ff;z-index:1;color:#888780;font-size:11px">${totalPartners} parceiros</td>
+    ${weekTotals.map((v,j)=>{
+      const prev=j>0?weekTotals[j-1]:null;
+      const cls=phcls(v,prev);
+      return `<td class="${cls}" style="text-align:center;font-weight:700;min-width:52px">${v>0?v:''}</td>`;
+    }).join('')}
+    <td class="total-col" style="position:sticky;right:0;background:#e8f0ff;font-weight:700;text-align:center">${fmt(grandTotal)}</td>
+  </tr>`;
+
   document.getElementById('partnerHeatmap').innerHTML=`<thead>${hdr}</thead><tbody>${rows}</tbody>`;
 
   // Ranking table
@@ -1211,28 +1321,46 @@ function renderPartners(){
     <th style="text-align:left">Parceiro</th>
     <th style="text-align:left">Classificação</th>
     <th>Total NPs</th>
+    <th>% do total</th>
     <th>Última sem.</th>
     <th>Melhor sem.</th>
     <th>Semanas ativo</th>
-    <th>Média/sem</th>
+    <th>Média/sem ativa</th>
+    <th>Tendência</th>
   </tr>`;
 
   let rankRows='';
   partners.forEach((p,i)=>{
-    const semanasAtivo=p.weekly.filter(v=>v>0).length;
-    const melhorSem=Math.max(...p.weekly);
-    const media=semanasAtivo>0?(p.total/semanasAtivo).toFixed(1):0;
+    const pctTotal=grandTotal>0?(p.total/grandTotal*100).toFixed(1)+'%':'—';
+    // Tendência: compare last 3 weeks vs 3 weeks before
+    const half=Math.floor(p.weekly.length/2);
+    const r1=p.weekly.slice(-3).reduce((s,v)=>s+v,0);
+    const r2=p.weekly.slice(-6,-3).reduce((s,v)=>s+v,0);
+    const tend=r2>0?((r1/r2-1)*100):null;
+    const tendStr=tend!=null?`<span class="${tend>=0?'pos':'neg'}">${tend>=0?'▲':'▼'} ${Math.abs(tend).toFixed(0)}%</span>`:'—';
     rankRows+=`<tr>
       <td class="rank">${i+1}</td>
-      <td>${p.nivel}</td>
-      <td>${p.cls}</td>
+      <td style="font-weight:500">${p.nivel}</td>
+      <td style="color:#888780;font-size:11px">${p.cls}</td>
       <td><strong>${p.total}</strong></td>
+      <td style="color:#888780">${pctTotal}</td>
       <td>${p.last}</td>
-      <td>${melhorSem}</td>
-      <td>${semanasAtivo}</td>
-      <td>${media}</td>
+      <td>${p.best}</td>
+      <td>${p.active}</td>
+      <td>${p.avg.toFixed(1)}</td>
+      <td>${tendStr}</td>
     </tr>`;
   });
+
+  // Total row for ranking
+  rankRows+=`<tr style="border-top:2px solid #e8e6df;font-weight:700;background:#f0f4ff">
+    <td></td><td>TOTAL</td><td style="color:#888780;font-size:11px">${totalPartners} parceiros</td>
+    <td><strong>${fmt(grandTotal)}</strong></td><td>100%</td>
+    <td>${fmt(lastWeekTotal)}</td>
+    <td>${fmt(Math.max(...partners.map(p=>p.best)))}</td>
+    <td>—</td><td>—</td><td>—</td>
+  </tr>`;
+
   document.getElementById('partnerRanking').innerHTML=`<thead>${rankHdr}</thead><tbody>${rankRows}</tbody>`;
 }
 
