@@ -28,6 +28,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .filterbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;background:#fff;border:1px solid #e8e6df;border-radius:10px;margin-bottom:14px}
 .filterbar label{font-size:11px;color:#888780;white-space:nowrap}
 .filterbar select,.filterbar input{font-size:11.5px;padding:5px 8px;border:1px solid #d3d1c7;border-radius:7px;background:#faf9f6;color:#1a1a18;cursor:pointer}
+.ms-wrap{position:relative;display:inline-block}
+.ms-btn{font-size:11.5px;padding:5px 24px 5px 8px;border:1px solid #d3d1c7;border-radius:7px;background:#faf9f6;color:#1a1a18;cursor:pointer;min-width:130px;text-align:left;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888780'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center}
+.ms-drop{display:none;position:absolute;top:calc(100% + 2px);left:0;min-width:100%;background:#fff;border:1px solid #d3d1c7;border-radius:7px;box-shadow:0 4px 12px rgba(0,0,0,0.1);z-index:999;overflow:hidden}
+.ms-drop.open{display:block}
+.ms-opt{display:flex;align-items:center;gap:8px;padding:7px 12px;font-size:11.5px;color:#1a1a18;cursor:pointer;white-space:nowrap}
+.ms-opt:hover{background:#f5f4f0}
+.ms-opt input{accent-color:#1a1a18;cursor:pointer;width:13px;height:13px;flex-shrink:0}
+.ms-divider{height:1px;background:#e8e6df}
+
 .filterbar .sep{width:1px;height:22px;background:#e8e6df;margin:0 4px}
 .rbtn{font-size:11.5px;padding:5px 11px;border:1px solid #ccc9c0;border-radius:7px;background:#fff;color:#1a1a18;cursor:pointer;margin-left:auto}
 .rbtn:hover{background:#f0ede6}
@@ -106,8 +115,10 @@ tr:hover td{background:#faf9f6}
 .ch-lbl{font-size:10.5px;font-weight:700;color:#5f5e5a;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
 
 /* OVERVIEW GRID */
-.ov-kpi-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;margin-bottom:14px}
-@media(max-width:900px){.ov-kpi-grid{grid-template-columns:repeat(4,1fr)}}
+.ov-kpi-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;margin-bottom:6px}
+.ov-kpi-grid-total{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:14px}
+@media(max-width:900px){.ov-kpi-grid,.ov-kpi-grid-total{grid-template-columns:repeat(3,1fr)}}
+.ov-kpi.total{border-left:3px solid #378ADD;background:#fafcff}
 .ov-kpi{background:#fff;border:1px solid #e8e6df;border-radius:9px;padding:10px 12px;text-align:center}
 .ov-kpi-lbl{font-size:10px;color:#888780;margin-bottom:3px}
 .ov-kpi-v{font-size:16px;font-weight:700;color:#1a1a18}
@@ -128,9 +139,14 @@ tr:hover td{background:#faf9f6}
 <!-- FILTER BAR -->
 <div class="filterbar">
   <label>Mês</label>
-  <select id="fMes" onchange="applyFilter()">
-    <option value="todos">Todos</option>
-  </select>
+  <div class="ms-wrap" id="msWrap">
+    <button type="button" class="ms-btn" id="msBtn" onclick="msDrop()">Todos os meses</button>
+    <div class="ms-drop" id="msDrop">
+      <label class="ms-opt"><input type="checkbox" id="cbAll" checked onchange="msAll(this)"> Todos os meses</label>
+      <div class="ms-divider"></div>
+      <div id="msOpts"></div>
+    </div>
+  </div>
   <div class="sep"></div>
   <label>De</label>
   <select id="fDe" onchange="applyFilter()"></select>
@@ -158,11 +174,13 @@ tr:hover td{background:#faf9f6}
   <button onclick="setMain(2)">Tracker</button>
   <button onclick="setMain(3)">Funil</button>
   <button onclick="setMain(4)">CVR & Cohort</button>
+  <button onclick="setMain(5)">Partners</button>
 </div>
 
 <!-- ═══ TAB 1: VISÃO GERAL ═══ -->
 <div id="main1">
   <div class="ov-kpi-grid" id="ovKpis"></div>
+  <div class="ov-kpi-grid-total" id="ovTotal"></div>
   <div class="g2">
     <div class="panel">
       <div class="plbl">Conteúdo — Trial → NP → NS</div>
@@ -290,16 +308,50 @@ tr:hover td{background:#faf9f6}
     <span><span class="csw h0"></span>&lt;10%</span><span><span class="csw h1"></span>10–15%</span><span><span class="csw h2"></span>15–20%</span><span><span class="csw h3"></span>20–30%</span><span><span class="csw h4"></span>30–40%</span><span><span class="csw h5"></span>&gt;40%</span>
     <span style="margin-left:6px;color:#aaa9a5">— = ainda sem dados</span>
   </div>
+  <div class="sep" style="margin-top:14px">Cohort Trial → NP / NS (% dos Trials que converteram)</div>
   <div class="g2">
-    <div class="panel"><div class="ch-lbl">Cohort — Conteúdo</div><div class="tw"><table class="ct" id="coC"></table></div></div>
-    <div class="panel"><div class="ch-lbl">Cohort — Padrão</div><div class="tw"><table class="ct" id="coP"></table></div></div>
+    <div class="panel"><div class="ch-lbl">Conteúdo — Trial→NP/NS</div><div class="tw"><table class="ct" id="coC"></table></div></div>
+    <div class="panel"><div class="ch-lbl">Padrão — Trial→NP/NS</div><div class="tw"><table class="ct" id="coP"></table></div></div>
+  </div>
+  <div class="sep">Cohort Trial → NP (% acumulada de Trials que viraram NP)</div>
+  <div class="hint">Cada célula = % dos Trials daquela semana que já viraram NP até +N semanas</div>
+  <div class="g2">
+    <div class="panel"><div class="ch-lbl">Conteúdo — Trial→NP</div><div class="tw"><table class="ct" id="coCnp"></table></div></div>
+    <div class="panel"><div class="ch-lbl">Padrão — Trial→NP</div><div class="tw"><table class="ct" id="coPnp"></table></div></div>
+  </div>
+</div>
+
+<!-- ═══ TAB 5: PARTNERS ═══ -->
+<div id="main5" style="display:none">
+  <div class="partner-controls">
+    <label>Classificação</label>
+    <select id="partnerClass" onchange="renderPartners()">
+      <option value="todos">Todas</option>
+    </select>
+    <label>Ordenar por</label>
+    <select id="partnerSort" onchange="renderPartners()">
+      <option value="total">Total NPs</option>
+      <option value="last">Última semana</option>
+      <option value="name">Nome</option>
+    </select>
+    <label>Mín. NPs total</label>
+    <input type="number" id="partnerMin" value="0" min="0" style="width:70px" onchange="renderPartners()">
+  </div>
+  <div class="panel">
+    <div class="plbl">Heatmap — NPs por parceiro por semana</div>
+    <div class="hint">Intensidade = volume de NPs · valores absolutos em cada célula</div>
+    <div class="tw"><table class="pt" id="partnerHeatmap"></table></div>
+  </div>
+  <div class="panel" style="margin-top:14px">
+    <div class="plbl">Ranking de parceiros — NPs acumulados</div>
+    <div class="tw"><table class="pt" id="partnerRanking"></table></div>
   </div>
 </div>
 
 </div><!-- /shell -->
 <script>
 const GAS='https://script.google.com/macros/s/AKfycbz5TwFg7kX51qqjX2_xLWNFP-qBP4NvYcb3OGR-sf2ulogmMVwj63omWyK_pJJcCoIG/exec';
-const CI={mes:1,semana:2,trials_c:12,nps_c:13,nss_c:14,parceiros:10,sessoes:11,cadastrados:15,comissionados:16,trials_p:19,nps_p:20,nss_p:21};
+const CI={mes:0,semana:1,trials_c:11,nps_c:12,nss_c:13,parceiros:9,sessoes:10,cadastrados:14,comissionados:15,trials_p:18,nps_p:19,nss_p:20};
 const CM={semana:1,tgt_trials_c:10,tgt_nps_c:11,tgt_nss_c:12,tgt_parceiros:8,tgt_sessoes:9,tgt_cadastrados:13,tgt_comissionados:14,tgt_trials_p:15,tgt_nps_p:16,tgt_nss_p:17};
 
 /* ── METAS MENSAIS FIXAS (Metas_Gerais) ── */
@@ -352,7 +404,8 @@ const CH={};
 const num=v=>{if(v==null||String(v).trim()==='')return null;const s=String(v).trim();const n=parseFloat(s.includes(',')&&!s.includes('.')?s.replace(',','.'):s.includes(',')&&s.includes('.')?s.replace(/\./g,'').replace(',','.'):s);return isNaN(n)?null:n;};
 const fmt=v=>v==null?'—':Math.round(v).toLocaleString('pt-BR');
 const fP=v=>v==null?'—':v.toFixed(1)+'%';
-const pct=(a,b)=>(a!=null&&b!=null&&b!==0)?a/b*100:null;
+const pct=(a,b)=>(a!=null&&b!=null&&b!==0)?a/b*100:null;  // ratio % (used for CVR)
+const delta=(a,b)=>(a!=null&&b!=null&&b!==0)?(a/b-1)*100:null;  // delta vs target
 const dc=v=>v==null?'neu':v>=0?'pos':'neg';
 const pill=(v,s='%')=>v==null?'—':`<span class="pill ${v>=0?'pos':'neg'}">${v>=0?'+':''}${v.toFixed(1)}${s}</span>`;
 const cumsum=a=>{let s=0;return a.map(v=>v==null?null:(s+=v,s));};
@@ -369,11 +422,13 @@ function setStatus(t,m){const b=document.getElementById('sb');b.className=t;docu
 async function loadData(){
   setStatus('loading','Carregando dados...');
   try{
-    const[rI,rM]=await Promise.all([
+    const[rI,rM,rP]=await Promise.all([
       fetch(`${GAS}?sheet=Input_Time`).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}),
       fetch(`${GAS}?sheet=Metas_Diarias`).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}),
+      fetch(`${GAS}?sheet=Partners_NPs`).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}).catch(()=>[]),
     ]);
     buildFull(rI,rM);
+    buildPartners(rP);
     setStatus('ok',`Atualizado ${new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`);
   }catch(e){
     setStatus('error','Erro: '+e.message);
@@ -444,10 +499,55 @@ function buildFull(inputAll,metasAll){
 /* ── FILTERS ── */
 function buildFilters(){
   const meses=[...new Set(FULL.months)];
-  const fMes=document.getElementById('fMes');
-  fMes.innerHTML='<option value="todos">Todos os meses</option>';
-  meses.forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m.charAt(0).toUpperCase()+m.slice(1);fMes.appendChild(o);});
+  const container=document.getElementById('msOpts');
+  container.innerHTML='';
+  meses.forEach(m=>{
+    const lbl=document.createElement('label');
+    lbl.className='ms-opt';
+    lbl.innerHTML=`<input type="checkbox" data-mes="${m}" checked onchange="msMonth()"> ${m.charAt(0).toUpperCase()+m.slice(1)}`;
+    container.appendChild(lbl);
+  });
+  document.getElementById('cbAll').checked=true;
+  msUpdateBtn();
   populateWeekSelectors(0,FULL.weeks.length-1);
+}
+
+function msDrop(){
+  document.getElementById('msDrop').classList.toggle('open');
+}
+document.addEventListener('click',e=>{
+  if(!document.getElementById('msWrap')?.contains(e.target))
+    document.getElementById('msDrop')?.classList.remove('open');
+});
+function msAll(cb){
+  document.querySelectorAll('#msOpts input').forEach(c=>c.checked=cb.checked);
+  msUpdateBtn(); updateWeekRange(); applyFilter();
+}
+function msMonth(){
+  const all=[...document.querySelectorAll('#msOpts input')];
+  document.getElementById('cbAll').checked=all.every(c=>c.checked);
+  msUpdateBtn(); updateWeekRange(); applyFilter();
+}
+function msUpdateBtn(){
+  const sel=getSelectedMonths();
+  const btn=document.getElementById('msBtn');
+  if(sel==='todos') btn.textContent='Todos os meses';
+  else if(sel.length===0) btn.textContent='Nenhum';
+  else if(sel.length===1) btn.textContent=sel[0].charAt(0).toUpperCase()+sel[0].slice(1);
+  else btn.textContent=sel.length+' meses';
+}
+function updateWeekRange(){
+  const sel=getSelectedMonths();
+  if(sel==='todos') populateWeekSelectors(0,FULL.weeks.length-1);
+  else if(sel.length>0){
+    const idxs=FULL.months.map((m,i)=>sel.includes(m)?i:-1).filter(i=>i>=0);
+    if(idxs.length) populateWeekSelectors(idxs[0],idxs[idxs.length-1]);
+  }
+}
+function getSelectedMonths(){
+  if(document.getElementById('cbAll')?.checked) return 'todos';
+  const sel=[...document.querySelectorAll('#msOpts input')].filter(c=>c.checked).map(c=>c.dataset.mes);
+  return sel.length?sel:'todos';
 }
 
 function populateWeekSelectors(from,to){
@@ -465,22 +565,19 @@ function populateWeekSelectors(from,to){
   if(selAte!=='' && Number(selAte)>=from && Number(selAte)<=to) ate.value=selAte;
 }
 
-document.getElementById('fMes').addEventListener('change',function(){
-  const mes=this.value;
-  if(mes==='todos'){
-    populateWeekSelectors(0,FULL.weeks.length-1);
-  } else {
-    const idxs=FULL.months.map((m,i)=>m===mes?i:-1).filter(i=>i>=0);
-    if(idxs.length){populateWeekSelectors(idxs[0],idxs[idxs.length-1]);}
-  }
-  applyFilter();
-});
+
 
 function applyFilter(){
   if(!FULL.loaded)return;
   const de=parseInt(document.getElementById('fDe').value)||0;
   const ate=parseInt(document.getElementById('fAte').value)||(FULL.weeks.length-1);
-  const from=Math.min(de,ate),to=Math.max(de,ate);
+  let from=Math.min(de,ate),to=Math.max(de,ate);
+  // Filter by selected months
+  const selMes=getSelectedMonths();
+  if(selMes!=='todos'&&selMes.length>0){
+    const validIdxs=FULL.months.map((m,i)=>selMes.includes(m)?i:-1).filter(i=>i>=0);
+    if(validIdxs.length){from=validIdxs[0];to=validIdxs[validIdxs.length-1];}
+  }
   F.weeks=FULL.weeks.slice(from,to+1);
   F.months=FULL.months.slice(from,to+1);
   const sl=k=>FULL.dc[k].slice(from,to+1);
@@ -501,7 +598,7 @@ function destroy(...keys){keys.forEach(k=>{if(CH[k]){CH[k].destroy();CH[k]=null;
 function setMain(n){
   mainTab=n;
   document.querySelectorAll('.main-tabs button').forEach((b,i)=>b.classList.toggle('on',i===n-1));
-  [1,2,3,4].forEach(i=>document.getElementById('main'+i).style.display=i===n?'block':'none');
+  [1,2,3,4,5].forEach(i=>document.getElementById('main'+i).style.display=i===n?'block':'none');
   renderCurrentTab();
 }
 function setSubTab(n){
@@ -515,6 +612,7 @@ function renderCurrentTab(){
   else if(mainTab===2)renderTracker();
   else if(mainTab===3)renderFunnel();
   else if(mainTab===4)renderCVRCohort();
+  else if(mainTab===5)renderPartners();
 }
 
 /* ══════════════════════════════════════════════
@@ -543,7 +641,7 @@ function renderOverview(){
     return hasAny?s:null;
   }
 
-  // Overview KPI cards
+  // Overview KPI cards — Conteúdo + Padrão separados
   const kpiDefs=[
     {lbl:'Trials C',v:sumTc,tgt:sumMonthlyTgt(F.kpis.trials_c.tgtM)},
     {lbl:'NPs C',v:sumNc,tgt:sumMonthlyTgt(F.kpis.nps_c.tgtM)},
@@ -553,11 +651,27 @@ function renderOverview(){
     {lbl:'NSs P',v:sumSp,tgt:sumMonthlyTgt(F.kpis.nss_p.tgtM)},
     {lbl:'Sessões',v:sumSess,tgt:sumMonthlyTgt(F.kpis.sessoes.tgtM)},
   ];
-  document.getElementById('ovKpis').innerHTML=kpiDefs.map(k=>{
-    const d=(k.tgt!=null&&k.tgt>0)?pct(k.v-k.tgt,k.tgt):null;
+  const mkCard=(k,extra='')=>{
+    const d=(k.tgt!=null&&k.tgt>0)?delta(k.v,k.tgt):null;
     const tgtStr=k.tgt!=null?` <span style="color:#aaa9a5;font-size:9px">meta ${fmt(k.tgt)}</span>`:'';
-    return `<div class="ov-kpi"><div class="ov-kpi-lbl">${k.lbl}</div><div class="ov-kpi-v">${fmt(k.v)}</div><div class="ov-kpi-d ${dc(d)}">${d!=null?(d>=0?'+':'')+d.toFixed(1)+'% vs meta':''}${tgtStr}</div></div>`;
-  }).join('');
+    return `<div class="ov-kpi${extra}"><div class="ov-kpi-lbl">${k.lbl}</div><div class="ov-kpi-v">${fmt(k.v)}</div><div class="ov-kpi-d ${dc(d)}">${d!=null?(d>=0?'+':'')+d.toFixed(1)+'% vs meta':''}${tgtStr}</div></div>`;
+  };
+  document.getElementById('ovKpis').innerHTML=kpiDefs.map(k=>mkCard(k)).join('');
+
+  // Total cards — Conteúdo + Padrão somados
+  const sumNN2=a=>a.filter(x=>x!=null).reduce((s,x)=>s+x,0)||null;
+  const totTrials=(sumTc||0)+(sumTp||0);
+  const totNPs=(sumNc||0)+(sumNp||0);
+  const totNSs=(sumSc||0)+(sumSp||0);
+  const totTgtTrials=(sumMonthlyTgt(F.kpis.trials_c.tgtM)||0)+(sumMonthlyTgt(F.kpis.trials_p.tgtM)||0)||null;
+  const totTgtNPs=(sumMonthlyTgt(F.kpis.nps_c.tgtM)||0)+(sumMonthlyTgt(F.kpis.nps_p.tgtM)||0)||null;
+  const totTgtNSs=(sumMonthlyTgt(F.kpis.nss_c.tgtM)||0)+(sumMonthlyTgt(F.kpis.nss_p.tgtM)||0)||null;
+  const totalDefs=[
+    {lbl:'Total Trials (C+P)',v:totTrials,tgt:totTgtTrials},
+    {lbl:'Total NPs (C+P)',v:totNPs,tgt:totTgtNPs},
+    {lbl:'Total NSs (C+P)',v:totNSs,tgt:totTgtNSs},
+  ];
+  document.getElementById('ovTotal').innerHTML=totalDefs.map(k=>mkCard(k,' total')).join('');
 
   // Funnel bar charts
   destroy('ovFC','ovFP','ovCC','ovCP');
@@ -604,6 +718,26 @@ function renderOverview(){
       <td>${cvnpp}</td><td>${cvnsp}</td>
     </tr>`;
   }
+  // Total row
+  const totT=tc.map((v,i)=>(v||0)+(tp[i]||0));
+  const totN=nc.map((v,i)=>(v||0)+(np[i]||0));
+  const totS=sc.map((v,i)=>(v||0)+(sp[i]||0));
+  const sumTotT=sumNN(totT),sumTotN=sumNN(totN),sumTotS=sumNN(totS);
+  rows+=`<tr style="border-top:2px solid #e8e6df;font-weight:600;background:#fafcff">
+    <td>Total</td>
+    <td>${fmt(sumSess)}</td>
+    <td>${fmt(sumTc)}</td><td>${fmt(sumNc)}</td><td>${fmt(sumSc)}</td>
+    <td>—</td><td>${fP(pct(sumNc,sumTc))}</td><td>${fP(pct(sumSc,sumNc))}</td>
+    <td style="border-left:1px solid #e8e6df">${fmt(sumTp)}</td><td>${fmt(sumNp)}</td><td>${fmt(sumSp)}</td>
+    <td>${fP(pct(sumNp,sumTp))}</td><td>${fP(pct(sumSp,sumNp))}</td>
+  </tr>
+  <tr style="font-weight:700;background:#f0f4ff">
+    <td>C+P</td>
+    <td>—</td>
+    <td colspan="3" style="text-align:center">${fmt(sumTotT)} T / ${fmt(sumTotN)} NP / ${fmt(sumTotS)} NS</td>
+    <td>—</td><td>${fP(pct(sumTotN,sumTotT))}</td><td>${fP(pct(sumTotS,sumTotN))}</td>
+    <td colspan="5" style="color:#888780;font-size:11px">CVR consolidado C+P</td>
+  </tr>`;
   document.getElementById('ovTable').innerHTML=`<thead><tr>
     <th rowspan="2" style="text-align:left">Semana</th>
     <th rowspan="2">Sessões</th>
@@ -633,7 +767,7 @@ function renderTracker(){
   let last=N-1;while(last>0&&d.real[last]==null)last--;
   const r=d.real[last],t=d.tgt[last],prev=last>0?d.real[last-1]:null;
   const monthTgt=d.tgtM?d.tgtM[last]:null;
-  const wow=pct(r,prev),dm=pct(r,t),daM=pct(aRm[last],monthTgt),daY=pct(aR[last],aT[last]);
+  const wow=delta(r,prev),dm=delta(r,t),daM=delta(aRm[last],monthTgt),daY=delta(aR[last],aT[last]);
   const cls=v=>v==null?'neu':v>=0?'pos':'neg';
   const mes=(F.months[last]||'').charAt(0).toUpperCase()+(F.months[last]||'').slice(1,3);
 
@@ -651,7 +785,7 @@ function renderTracker(){
       {label:'Meta',data:d.tgt,backgroundColor:'rgba(55,138,221,0.18)',borderColor:'#378ADD',borderWidth:1,borderRadius:3,order:2},
       {label:'Realizado',data:d.real,backgroundColor:'rgba(29,158,117,0.85)',borderWidth:0,borderRadius:3,order:1}
     ]},options:barOpts()});
-    let rows='';for(let i=0;i<N;i++){if(d.real[i]==null&&d.tgt[i]==null)continue;rows+=`<tr><td>${F.weeks[i]}</td><td>${fmt(d.real[i])}</td><td>${fmt(d.tgt[i])}</td><td>${pill(pct(d.real[i],d.tgt[i]))}</td></tr>`;}
+    let rows='';for(let i=0;i<N;i++){if(d.real[i]==null&&d.tgt[i]==null)continue;rows+=`<tr><td>${F.weeks[i]}</td><td>${fmt(d.real[i])}</td><td>${fmt(d.tgt[i])}</td><td>${pill(delta(d.real[i],d.tgt[i]))}</td></tr>`;}
     document.getElementById('st1').innerHTML=`<thead><tr><th style="text-align:left">Semana</th><th>Realizado</th><th>Meta</th><th>Δ Meta</th></tr></thead><tbody>${rows}</tbody>`;
 
   } else if(subTab===2){
@@ -685,7 +819,7 @@ function renderTracker(){
         <td>${fmt(d.real[i])}</td>
         <td><strong>${fmt(aRm[i])}</strong></td>
         <td>${fmt(mTgt)}</td>
-        <td>${pill(pct(aRm[i],mTgt))}</td>
+        <td>${pill(delta(aRm[i],mTgt))}</td>
       </tr>`;
     }
     document.getElementById('st3').innerHTML=`<thead><tr><th style="text-align:left">Semana</th><th>Mês</th><th>Realizado</th><th>Acum. Mês</th><th>Meta Mês</th><th>Δ %</th></tr></thead><tbody>${rows}</tbody>`;
@@ -705,7 +839,7 @@ function renderTracker(){
         <td>${fmt(d.real[i])}</td>
         <td><strong>${fmt(aR[i])}</strong></td>
         <td>${fmt(aT[i])}</td>
-        <td>${pill(pct(aR[i],aT[i]))}</td>
+        <td>${pill(delta(aR[i],aT[i]))}</td>
       </tr>`;
     }
     document.getElementById('st4').innerHTML=`<thead><tr><th style="text-align:left">Semana</th><th>Realizado</th><th>Acum. Ano</th><th>Meta Ano</th><th>Δ %</th></tr></thead><tbody>${rows}</tbody>`;
@@ -858,6 +992,248 @@ function renderCVRCohort(){
   const{cnp:cnpC,cns:cnsC}=build(tc,nc,sc);
   const{cnp:cnpP,cns:cnsP}=build(tp,np,sp);
   renderT('coC',tc,cnpC,cnsC);renderT('coP',tp,cnpP,cnsP);
+
+  // Cohort Trial→NP only — focused view with finer color scale
+  function hclsNP(v){
+    if(v==null)return'';
+    if(v>=35)return'h5';if(v>=28)return'h4';if(v>=22)return'h3';
+    if(v>=16)return'h2';if(v>=10)return'h1';return'h0';
+  }
+  function renderTnp(id,trials,cnp){
+    let h='<tr><th style="text-align:left">Entrada</th><th>Trials</th>';
+    for(let j=0;j<5;j++)h+=`<th>+${j} sem</th>`;
+    h+='</tr>';
+    let rows='';
+    for(let i=0;i<N;i++){
+      if(trials[i]==null)continue;
+      rows+=`<tr><td class="wl">${F.weeks[i]}</td><td>${fmt(trials[i])}</td>`;
+      for(let j=0;j<5;j++){
+        if(j<cnp[i].length){
+          const v=cnp[i][j];
+          const prev=j>0?cnp[i][j-1]:null;
+          const inc=v!=null&&prev!=null?v-prev:null;
+          rows+=`<td class="${hclsNP(v)}" title="Acum: ${v!=null?v.toFixed(1)+'%':'—'} | +${inc!=null?inc.toFixed(1)+'%':'—'} nessa sem">
+            <strong>${v!=null?v.toFixed(1)+'%':'—'}</strong>
+            ${inc!=null?`<br><span style="font-size:10px;opacity:.65;color:${inc>0?'#0f6e56':'#993c1d'}">+${inc.toFixed(1)}%</span>`:''}
+          </td>`;
+        } else rows+=`<td style="opacity:.2">—</td>`;
+      }
+      rows+='</tr>';
+    }
+    document.getElementById(id).innerHTML=`<thead>${h}</thead><tbody>${rows}</tbody>`;
+  }
+  renderTnp('coCnp',tc,cnpC);
+  renderTnp('coPnp',tp,cnpP);
+}
+
+/* ══════════════════════════════════════════════
+   PARTNERS
+══════════════════════════════════════════════ */
+let PARTNERS = { weeks:[], data:{} }; // data[partner] = { class, weekly:{week: nps} }
+
+// Parse date string dd/mm/yyyy or ISO to week number matching FULL.weeks
+function dateToWeekKey(dateStr){
+  if(!dateStr) return null;
+  let d;
+  if(String(dateStr).includes('T')){
+    d=new Date(dateStr);
+  } else {
+    const parts=String(dateStr).split('/');
+    if(parts.length===3) d=new Date(`${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`);
+    else return null;
+  }
+  if(isNaN(d)) return null;
+  // Find matching week in FULL by checking which week contains this date
+  // Weeks in FULL.weeks are labeled S{n} {mes} — use FULL week numbers from Input_Time
+  // We match by finding the semana number: week starts Sunday
+  // Use ISO week logic: find the week number relative to our data
+  // Simpler: match against the week boundaries we know from Input_Time semana col
+  return d;
+}
+
+function buildPartners(rows){
+  if(!rows||rows.length<2){ PARTNERS={weeks:[],data:{}}; return; }
+  // rows[0] = header: [Affiliate Classification, Nivel, Date Payments, New Payments, ...]
+  // rows[1..] = data
+  const data={};
+  const classes=new Set();
+
+  for(const r of rows.slice(1)){
+    const cls=String(r[0]||'').trim();
+    const nivel=String(r[1]||'').trim();
+    const dateRaw=r[2];
+    const nps=Number(r[3])||0;
+    if(!nivel) continue;
+
+    // Convert date to week key using FULL weeks
+    // Find which FULL week this date belongs to
+    let d;
+    if(String(dateRaw).includes('T')){d=new Date(dateRaw);}
+    else{const p=String(dateRaw).split('/');if(p.length===3)d=new Date(`${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`);else continue;}
+    if(isNaN(d)) continue;
+
+    // Match to FULL week: Input_Time has one row per week
+    // We need to find which semana number this date maps to
+    // Use a simple approach: group by YYYY-Wn using ISO week
+    const yr=d.getFullYear();
+    // Get day of year then compute week number (Sun-start)
+    const startOfYear=new Date(yr,0,1);
+    const dayOfYear=Math.floor((d-startOfYear)/(86400000));
+    // Find matching week label from FULL
+    const isoWeek=d.toISOString().slice(0,10);
+
+    if(!data[nivel]) data[nivel]={cls, weekly:{}};
+    classes.add(cls);
+    // Store by date string, will aggregate to weeks later
+    if(!data[nivel].weekly[isoWeek]) data[nivel].weekly[isoWeek]=0;
+    data[nivel].weekly[isoWeek]+=nps;
+  }
+
+  // Now aggregate daily data into FULL weeks
+  // For each partner, sum NPs for dates within each week range
+  // We derive week ranges from the dates in Input_Time
+  // Simple approach: for each FULL week label (S1 Jan, S2 Jan...) find date range
+  // We'll use the fact that FULL has weeks 1..N and months
+  // Build week→date range from metasAll (which has one row per day with semana col)
+  const weekDates={}; // weekNum -> [dates]
+  // We stored mmRaw which maps semana -> rows with dates
+  // Instead build from PARTNERS raw dates grouped by finding closest FULL week
+
+  // Match each date to a week using the same semana numbering
+  // The key insight: Metas_Diarias has Date col (idx 2) and Semana col (idx 1 after fix)
+  // We'll re-derive from the partner dates themselves
+  // For now use a 7-day grouping starting from Jan 1 2026
+  const baseDate=new Date('2026-01-01');
+
+  // Build aggregated partner data by week index
+  const partnerWeekly={}; // nivel -> array[N] of nps
+  const N=FULL.weeks.length;
+
+  // Get date range for each FULL week from mmRaw (already computed in buildFull)
+  // Since mmRaw is local to buildFull, we'll recompute week→date mapping here
+  // Use a simpler method: assign each date to week based on day offset from 2026-01-01
+  // Week boundaries from the data: S1=Jan1-3(3days), S2=Jan4-10, S3=Jan11-17...
+  // We'll use day-of-year / 7 won't work exactly, so match to nearest week
+
+  for(const [nivel,pdata] of Object.entries(data)){
+    partnerWeekly[nivel]=new Array(N).fill(0);
+    for(const [dateStr,nps] of Object.entries(pdata.weekly)){
+      const d2=new Date(dateStr);
+      // Find which FULL week index this date belongs to
+      // We match by finding FULL week whose semana covers this date
+      // Use offset from base: days since Jan 1 2026
+      const dayOffset=Math.floor((d2-baseDate)/86400000);
+      // Map to week index using cumulative day counts
+      // Week boundaries: S1=0-2(3days), S2=3-9(7days), S3=10-16...
+      let wIdx=0;
+      const bounds=[3,10,17,24,31,38,45,52,59,66,73,80,87,90,97,104,111,118,125];
+      for(let i=0;i<bounds.length;i++){
+        if(dayOffset<bounds[i]){wIdx=i;break;}
+        if(i===bounds.length-1) wIdx=bounds.length;
+      }
+      if(wIdx<N) partnerWeekly[nivel][wIdx]+=nps;
+    }
+  }
+
+  PARTNERS.weeks=FULL.weeks;
+  PARTNERS.data={};
+  for(const [nivel,pdata] of Object.entries(data)){
+    PARTNERS.data[nivel]={cls:pdata.cls, weekly:partnerWeekly[nivel]};
+  }
+  PARTNERS.classes=[...classes].sort();
+
+  // Populate class filter
+  const sel=document.getElementById('partnerClass');
+  if(sel){
+    sel.innerHTML='<option value="todos">Todas</option>';
+    PARTNERS.classes.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
+  }
+}
+
+function renderPartners(){
+  if(!PARTNERS.data||Object.keys(PARTNERS.data).length===0){
+    document.getElementById('partnerHeatmap').innerHTML='<tr><td>Nenhum dado de parceiros carregado</td></tr>';
+    document.getElementById('partnerRanking').innerHTML='';
+    return;
+  }
+  const clsFilter=document.getElementById('partnerClass')?.value||'todos';
+  const sortBy=document.getElementById('partnerSort')?.value||'total';
+  const minNPs=parseInt(document.getElementById('partnerMin')?.value)||0;
+
+  // Filter weeks to match current F filter
+  const wIdxs=FULL.weeks.map((w,i)=>F.weeks.includes(w)?i:-1).filter(i=>i>=0);
+  const wLabels=wIdxs.map(i=>FULL.weeks[i]);
+
+  // Build partner list
+  let partners=Object.entries(PARTNERS.data)
+    .filter(([n,d])=>clsFilter==='todos'||d.cls===clsFilter)
+    .map(([nivel,d])=>{
+      const weekly=wIdxs.map(i=>d.weekly[i]||0);
+      const total=weekly.reduce((s,v)=>s+v,0);
+      const last=weekly[weekly.length-1]||0;
+      return{nivel,cls:d.cls,weekly,total,last};
+    })
+    .filter(p=>p.total>=minNPs);
+
+  // Sort
+  if(sortBy==='total') partners.sort((a,b)=>b.total-a.total);
+  else if(sortBy==='last') partners.sort((a,b)=>b.last-a.last);
+  else partners.sort((a,b)=>a.nivel.localeCompare(b.nivel));
+
+  // Heatmap color scale
+  const allVals=partners.flatMap(p=>p.weekly).filter(v=>v>0);
+  const maxV=allVals.length?Math.max(...allVals):1;
+  function phcls(v){
+    if(!v||v===0)return'ph0';
+    const r=v/maxV;
+    if(r>=0.8)return'ph5';if(r>=0.6)return'ph4';if(r>=0.4)return'ph3';if(r>=0.2)return'ph2';return'ph1';
+  }
+
+  // Heatmap table
+  let hdr='<tr><th style="text-align:left">Parceiro</th><th style="text-align:left">Classificação</th>';
+  wLabels.forEach(w=>hdr+=`<th>${w.split(' ')[0]}</th>`);
+  hdr+='<th class="total-col">Total</th></tr>';
+
+  let rows='';
+  partners.forEach((p,i)=>{
+    rows+=`<tr>
+      <td><span class="rank">${i+1}</span> ${p.nivel}</td>
+      <td>${p.cls}</td>
+      ${p.weekly.map(v=>`<td class="${phcls(v)}">${v>0?v:''}</td>`).join('')}
+      <td class="total-col">${p.total}</td>
+    </tr>`;
+  });
+  document.getElementById('partnerHeatmap').innerHTML=`<thead>${hdr}</thead><tbody>${rows}</tbody>`;
+
+  // Ranking table
+  const rankHdr=`<tr>
+    <th style="text-align:left">#</th>
+    <th style="text-align:left">Parceiro</th>
+    <th style="text-align:left">Classificação</th>
+    <th>Total NPs</th>
+    <th>Última sem.</th>
+    <th>Melhor sem.</th>
+    <th>Semanas ativo</th>
+    <th>Média/sem</th>
+  </tr>`;
+
+  let rankRows='';
+  partners.forEach((p,i)=>{
+    const semanasAtivo=p.weekly.filter(v=>v>0).length;
+    const melhorSem=Math.max(...p.weekly);
+    const media=semanasAtivo>0?(p.total/semanasAtivo).toFixed(1):0;
+    rankRows+=`<tr>
+      <td class="rank">${i+1}</td>
+      <td>${p.nivel}</td>
+      <td>${p.cls}</td>
+      <td><strong>${p.total}</strong></td>
+      <td>${p.last}</td>
+      <td>${melhorSem}</td>
+      <td>${semanasAtivo}</td>
+      <td>${media}</td>
+    </tr>`;
+  });
+  document.getElementById('partnerRanking').innerHTML=`<thead>${rankHdr}</thead><tbody>${rankRows}</tbody>`;
 }
 
 /* ── FALLBACK ── */
