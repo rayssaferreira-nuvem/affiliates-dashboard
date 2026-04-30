@@ -299,7 +299,7 @@ tr:hover td{background:#faf9f6}
 </div><!-- /shell -->
 <script>
 const GAS='https://script.google.com/macros/s/AKfycbz5TwFg7kX51qqjX2_xLWNFP-qBP4NvYcb3OGR-sf2ulogmMVwj63omWyK_pJJcCoIG/exec';
-const CI={mes:0,semana:1,trials_c:11,nps_c:12,nss_c:13,parceiros:9,sessoes:10,cadastrados:14,comissionados:15,trials_p:18,nps_p:19,nss_p:20};
+const CI={mes:1,semana:2,trials_c:12,nps_c:13,nss_c:14,parceiros:10,sessoes:11,cadastrados:15,comissionados:16,trials_p:19,nps_p:20,nss_p:21};
 const CM={semana:1,tgt_trials_c:10,tgt_nps_c:11,tgt_nss_c:12,tgt_parceiros:8,tgt_sessoes:9,tgt_cadastrados:13,tgt_comissionados:14,tgt_trials_p:15,tgt_nps_p:16,tgt_nss_p:17};
 
 /* ── METAS MENSAIS FIXAS (Metas_Gerais) ── */
@@ -368,18 +368,14 @@ function setStatus(t,m){const b=document.getElementById('sb');b.className=t;docu
 /* ── FETCH ── */
 async function loadData(){
   setStatus('loading','Carregando dados...');
-  console.log('loadData called, GAS=', GAS);
   try{
     const[rI,rM]=await Promise.all([
       fetch(`${GAS}?sheet=Input_Time`).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}),
       fetch(`${GAS}?sheet=Metas_Diarias`).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}),
     ]);
-    console.log('Input rows:', rI.length, 'first:', JSON.stringify(rI[1]?.slice(0,5)));
-    console.log('Metas rows:', rM.length, 'first:', JSON.stringify(rM[1]?.slice(0,5)));
     buildFull(rI,rM);
     setStatus('ok',`Atualizado ${new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`);
   }catch(e){
-    console.error('FETCH ERROR:', e.message, e);
     setStatus('error','Erro: '+e.message);
     if(!FULL.loaded)loadFallback();
   }
