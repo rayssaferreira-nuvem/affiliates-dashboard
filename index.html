@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Affiliates BR — Dashboard 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f4f0;color:#1a1a18;font-size:13px}
+.shell{max-width:1100px;margin:0 auto;padding:20px 16px}
+#statusBar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;margin-bottom:14px;font-size:12px}
+#statusBar.loading{background:#e1f5ee;border:1px solid #9fe1cb;color:#0f6e56}
+#statusBar.error{background:#faece7;border:1px solid #f5c4b3;color:#993c1d}
+#statusBar.ok{background:#eaf3de;border:1px solid #c0dd97;color:#3b6d11}
+.spinner{width:14px;height:14px;border:2px solid #9fe1cb;border-top-color:#0f6e56;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+#statusBar.error .spinner,#statusBar.ok .spinner{display:none}
+.topbar{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;padding-bottom:14px;border-bottom:1px solid #dddbd3;margin-bottom:16px}
+.t1{font-size:17px;font-weight:600;color:#1a1a18}
+.t2{font-size:12px;color:#888780;margin-top:3px}
+.ctrl{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tabset{display:flex;border:1px solid #ccc9c0;border-radius:8px;overflow:hidden;background:#fff}
+.tabset button{background:transparent;border:none;padding:6px 13px;font-size:12px;cursor:pointer;color:#888780;white-space:nowrap}
+.tabset button.on{background:#1a1a18;color:#fff;font-weight:500}
+select{font-size:12px;padding:6px 9px;border:1px solid #ccc9c0;border-radius:8px;background:#fff;color:#1a1a18;cursor:pointer}
+.rbtn{font-size:12px;padding:6px 11px;border:1px solid #ccc9c0;border-radius:8px;background:#fff;color:#1a1a18;cursor:pointer}
+.rbtn:hover{background:#f0ede6}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+@media(max-width:700px){.g4{grid-template-columns:repeat(2,1fr)}.g2{grid-template-columns:1fr!important}}
+.mc{background:#fff;border-radius:8px;padding:12px 14px;border:1px solid #e8e6df}
+.mc-l{font-size:11px;color:#888780;margin-bottom:3px}
+.mc-v{font-size:20px;font-weight:600;color:#1a1a18}
+.mc-s{font-size:11px;margin-top:2px}
+.pos{color:#0f6e56}.neg{color:#993c1d}.neu{color:#888780}
+.panel{background:#fff;border:1px solid #e8e6df;border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.plbl{font-size:11px;font-weight:600;color:#888780;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.leg{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:8px;font-size:11px;color:#888780}
+.leg span{display:flex;align-items:center;gap:5px}
+.dot{width:10px;height:10px;border-radius:2px;display:inline-block;flex-shrink:0}
+.g2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px}
+.g2 .panel{margin-bottom:0}
+.ch-lbl{font-size:11px;font-weight:700;color:#5f5e5a;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.tw{overflow-x:auto;margin-top:10px}
+table{width:100%;border-collapse:collapse;font-size:11.5px}
+th{font-size:11px;font-weight:600;color:#888780;text-align:right;padding:5px 8px;border-bottom:1px solid #e8e6df;white-space:nowrap;background:#faf9f6}
+th:first-child{text-align:left}
+td{text-align:right;padding:4px 8px;border-bottom:1px solid #f0ede6;color:#1a1a18;white-space:nowrap}
+td:first-child{text-align:left;color:#5f5e5a}
+tr:hover td{background:#faf9f6}
+.pill{display:inline-block;padding:2px 7px;border-radius:20px;font-size:10.5px;font-weight:600}
+.pill.pos{background:#e1f5ee;color:#0f6e56}.pill.neg{background:#faece7;color:#993c1d}
+.ct{border-collapse:collapse;font-size:11.5px;min-width:560px}
+.ct th,.ct td{padding:5px 11px;border:1px solid #e8e6df;text-align:center;white-space:nowrap}
+.ct th{background:#faf9f6;font-weight:600;color:#888780}
+.ct td.wl{text-align:left;font-weight:600;color:#5f5e5a;background:#faf9f6}
+.h0{background:rgba(29,158,117,.07)}.h1{background:rgba(29,158,117,.16)}.h2{background:rgba(29,158,117,.28)}.h3{background:rgba(29,158,117,.44)}.h4{background:rgba(29,158,117,.63)}.h5{background:rgba(29,158,117,.84);color:#fff}
+.sep{border-top:1px solid #e8e6df;padding-top:12px;margin:4px 0 12px;font-size:11px;font-weight:700;color:#888780;text-transform:uppercase;letter-spacing:.05em}
+.hint{font-size:11px;color:#888780;margin-bottom:10px}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<div id="statusBar" class="loading">
+  <div class="spinner"></div>
+  <span id="statusMsg">Carregando dados da planilha...</span>
+</div>
+
+<div class="topbar">
+  <div>
+    <div class="t1">Affiliates BR — Dashboard 2026</div>
+    <div class="t2">Tracker Semanal · Cohort · Funil · CVR — Conteúdo & Padrão</div>
+  </div>
+  <div class="ctrl">
+    <select id="kpiSel">
+      <option value="trials_c">Trials (Conteúdo)</option>
+      <option value="nps_c">NPs (Conteúdo)</option>
+      <option value="nss_c">NSs (Conteúdo)</option>
+      <option value="parceiros">Parceiros na carteira</option>
+      <option value="sessoes">Sessões (Conteúdo)</option>
+      <option value="cadastrados">Cadastrados (Padrão)</option>
+      <option value="comissionados">Comissionados acumulado</option>
+      <option value="trials_p">Trials (Padrão)</option>
+      <option value="nps_p">NPs (Padrão)</option>
+      <option value="nss_p">NSs (Padrão)</option>
+    </select>
+    <div class="tabset" id="ttabs">
+      <button class="on" onclick="setTT(1)">Real vs Meta</button>
+      <button onclick="setTT(2)">Semana vs Semana</button>
+      <button onclick="setTT(3)">Acumulado</button>
+    </div>
+    <button class="rbtn" onclick="loadData()">↻ Atualizar</button>
+  </div>
+</div>
+
+<div class="g4" id="cards"></div>
+<div class="panel">
+  <div class="plbl" id="tlbl"></div>
+  <div class="leg" id="tleg"></div>
+  <div style="position:relative;width:100%;height:220px"><canvas id="tc"></canvas></div>
+  <div class="tw"><table id="ttbl"></table></div>
+</div>
+
+<div class="sep">Funil & CVR — Conteúdo vs Padrão</div>
+
+<div class="g2">
+  <div class="panel">
+    <div class="ch-lbl">Conteúdo — Trial → NP → NS</div>
+    <div class="leg"><span><span class="dot" style="background:#60B4F0"></span>Trials</span><span><span class="dot" style="background:#1D9E75"></span>NPs</span><span><span class="dot" style="background:#E8A838"></span>NSs</span></div>
+    <div style="position:relative;width:100%;height:200px"><canvas id="fC"></canvas></div>
+  </div>
+  <div class="panel">
+    <div class="ch-lbl">Padrão — Trial → NP → NS</div>
+    <div class="leg"><span><span class="dot" style="background:#60B4F0"></span>Trials</span><span><span class="dot" style="background:#1D9E75"></span>NPs</span><span><span class="dot" style="background:#E8A838"></span>NSs</span></div>
+    <div style="position:relative;width:100%;height:200px"><canvas id="fP"></canvas></div>
+  </div>
+</div>
+
+<div class="g2">
+  <div class="panel">
+    <div class="ch-lbl">Conteúdo — CVR Trial→NP e NP→NS</div>
+    <div class="leg"><span><span class="dot" style="background:#1D9E75"></span>Trial→NP real</span><span><span class="dot" style="background:#E8A838"></span>NP→NS real</span><span><span class="dot" style="background:rgba(29,158,117,.2);border:1px dashed #1D9E75"></span>metas</span></div>
+    <div style="position:relative;width:100%;height:200px"><canvas id="cC"></canvas></div>
+  </div>
+  <div class="panel">
+    <div class="ch-lbl">Padrão — CVR Trial→NP e NP→NS</div>
+    <div class="leg"><span><span class="dot" style="background:#1D9E75"></span>Trial→NP real</span><span><span class="dot" style="background:#E8A838"></span>NP→NS real</span><span><span class="dot" style="background:rgba(29,158,117,.2);border:1px dashed #1D9E75"></span>metas</span></div>
+    <div style="position:relative;width:100%;height:200px"><canvas id="cP"></canvas></div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="plbl">Tabela — Funil e CVR por semana</div>
+  <div class="tw"><table id="ftbl"></table></div>
+</div>
+
+<div class="sep">Cohort de conversão — % acumulada Trials → NP / NS por semana de entrada</div>
+<div class="hint">Linha = semana de entrada · coluna = +N semanas · NP% acumulada / NS% acumulada</div>
+<div class="panel"><div class="ch-lbl">Conteúdo</div><div class="tw"><table class="ct" id="coC"></table></div></div>
+<div class="panel"><div class="ch-lbl">Padrão</div><div class="tw"><table class="ct" id="coP"></table></div></div>
+
+</div>
+
+<script>
+/* ── URLs das abas publicadas como CSV ── */
+const CSV_INPUT = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQvTU99MQ4Rkv9U6Nk6_s9aEyUqcgt6wmAC_PEEA-pAPjZo3ePyvoCR0hApK9ViKACoKJdCnFhkDlj9/pub?gid=1203809542&single=true&output=csv';
+const CSV_METAS = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQvTU99MQ4Rkv9U6Nk6_s9aEyUqcgt6wmAC_PEEA-pAPjZo3ePyvoCR0hApK9ViKACoKJdCnFhkDlj9/pub?gid=1040233723&single=true&output=csv';
+const AUTO_REFRESH_MIN = 15;
+
+/*
+  MAPEAMENTO DE COLUNAS — Input Time (índice 0 = col A)
+  A=0  Mês
+  B=1  Semana
+  C=2  Data
+  D=3  Dia de semana
+  E=4  (vazio)
+  F=5  Quantidade de conteúdos publicados
+  G=6  Reativação Conteúdo
+  H=7  Prospecção em andamento (conteúdo)
+  I=8  Novos parceiros ativos (conteúdo)
+  J=9  Total de parceiros na carteira (conteúdo)
+  K=10 Sessões (conteúdo)
+  L=11 Trials (conteúdo)
+  M=12 NPs (conteúdo)
+  N=13 NSs (conteúdo)
+  O=14 Cadastrados (Padrão)
+  P=15 Comissionados acumulado (Padrão)
+  Q=16 Novos comissionados padrão
+  R=17 Eficiência
+  S=18 Trials (Padrão)
+  T=19 NPs (Padrão)
+  U=20 NSs (Padrão)
+
+  MAPEAMENTO DE COLUNAS — Metas Diarias (índice 0 = col A)
+  A=0  (vazio)
+  B=1  Mês
+  C=2  Semana  ← usada como chave de join
+  D=3  Data
+  E=4  Fim mês
+  F=5  Dias
+  G=6  Qtd conteúdos publicados
+  H=7  Prospecção em andamento
+  I=8  Novos parceiros ativos
+  J=9  Total parceiros carteira
+  K=10 Sessões (conteúdo)
+  L=11 Trials (conteúdo)
+  M=12 NPs (conteúdo)
+  N=13 NSs (conteúdo)
+  O=14 Cadastrados (Padrão)
+  P=15 Comissionados (Padrão)
+  Q=16 Trials (Padrão)
+  R=17 NPs (Padrão)
+  S=18 NSs (Padrão)
+*/
+const CI = { mes:0, semana:1, trials_c:11, nps_c:12, nss_c:13, parceiros:9, sessoes:10, cadastrados:14, comissionados:15, trials_p:18, nps_p:19, nss_p:20 };
+const CM = { semana:2, tgt_trials_c:11, tgt_nps_c:12, tgt_nss_c:13, tgt_parceiros:9, tgt_sessoes:10, tgt_cadastrados:14, tgt_comissionados:15, tgt_trials_p:16, tgt_nps_p:17, tgt_nss_p:18 };
+
+/* ── ESTADO ── */
+let S = { weeks:[], kpis:{}, dc:{tc:[],nc:[],sc:[],tp:[],np:[],sp:[]}, tgt:{mnc:[],msc:[],mnp:[],msp:[]}, loaded:false };
+let ttab = 1;
+const CH = {};
+
+/* ── HELPERS ── */
+const num = v => {
+  if(v==null||String(v).trim()==='') return null;
+  const n = parseFloat(String(v).replace(/\./g,'').replace(',','.'));
+  return isNaN(n) ? null : n;
+};
+const fmt  = v => v==null ? '—' : Math.round(v).toLocaleString('pt-BR');
+const fP   = v => v==null ? '—' : v.toFixed(1)+'%';
+const pct  = (a,b) => (a!=null&&b!=null&&b!==0) ? a/b*100 : null;
+const dc   = v => v==null ? 'neu' : v>=0 ? 'pos' : 'neg';
+const pill = (v,s='%') => v==null ? '—' : `<span class="pill ${v>=0?'pos':'neg'}">${v>=0?'+':''}${v.toFixed(1)}${s}</span>`;
+const cumsum = a => { let s=0; return a.map(v=>v==null?null:(s+=v,s)); };
+
+function setStatus(type, msg) {
+  const b = document.getElementById('statusBar');
+  b.className = type;
+  document.getElementById('statusMsg').textContent = msg;
+}
+
+/* ── CSV PARSER ── */
+function parseCSV(text) {
+  const rows = [];
+  for(const line of text.trim().split('\n')) {
+    const cols = []; let cur='', inQ=false;
+    for(let i=0;i<line.length;i++) {
+      const ch=line[i];
+      if(ch==='"'){inQ=!inQ;}
+      else if(ch===','&&!inQ){cols.push(cur.trim());cur='';}
+      else{cur+=ch;}
+    }
+    cols.push(cur.trim());
+    rows.push(cols);
+  }
+  return rows;
+}
+
+/* ── LOAD ── */
+async function loadData() {
+  setStatus('loading','Carregando dados da planilha...');
+  try {
+    const [rI, rM] = await Promise.all([fetch(CSV_INPUT), fetch(CSV_METAS)]);
+    if(!rI.ok) throw new Error(`Input Time: HTTP ${rI.status}`);
+    if(!rM.ok) throw new Error(`Metas Diarias: HTTP ${rM.status}`);
+    const inputRows = parseCSV(await rI.text()).slice(1); // remove header
+    const metasRows = parseCSV(await rM.text()).slice(1);
+    buildState(inputRows, metasRows);
+    setStatus('ok', `Atualizado às ${new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`);
+    renderAll();
+  } catch(e) {
+    setStatus('error','Erro: '+e.message);
+    if(!S.loaded) loadFallback();
+  }
+}
+
+function buildState(inputRows, metasRows) {
+  // Input Time: uma linha por semana, filtrar só linhas com semana preenchida e com dados reais
+  const iRows = inputRows.filter(r => {
+    const sem = r[CI.semana]?.trim();
+    return sem && sem !== '' && !isNaN(Number(sem)); // semana é número
+  });
+
+  // Construir label "S{semana} {Mês}" para exibição
+  S.weeks = iRows.map(r => {
+    const mes = r[CI.mes]?.trim() || '';
+    const sem = r[CI.semana]?.trim() || '';
+    return `S${sem} ${mes.charAt(0).toUpperCase()+mes.slice(0,3)}`;
+  });
+
+  const N = S.weeks.length;
+  const gI = col => iRows.slice(0,N).map(r => num(r[col]));
+
+  S.dc.tc = gI(CI.trials_c);
+  S.dc.nc = gI(CI.nps_c);
+  S.dc.sc = gI(CI.nss_c);
+  S.dc.tp = gI(CI.trials_p);
+  S.dc.np = gI(CI.nps_p);
+  S.dc.sp = gI(CI.nss_p);
+
+  const parc   = gI(CI.parceiros);
+  const sess   = gI(CI.sessoes);
+  const cadas  = gI(CI.cadastrados);
+  const comiss = gI(CI.comissionados);
+
+  // Metas Diarias: uma linha por dia — pega o primeiro valor de cada semana (semana é número na col C)
+  // Agrupa por número de semana, pega primeiro registro de cada
+  const metaMap = {};
+  for(const r of metasRows) {
+    const sem = r[CM.semana]?.trim();
+    if(sem && sem !== '' && !metaMap[sem]) metaMap[sem] = r;
+  }
+
+  // Para cada semana do input, busca a meta correspondente pelo número de semana
+  const semNums = iRows.map(r => r[CI.semana]?.trim());
+  const gM = col => semNums.map(s => metaMap[s] ? num(metaMap[s][col]) : null);
+
+  S.kpis = {
+    trials_c:     { label:'Trials (Conteúdo)',      real:S.dc.tc,  tgt:gM(CM.tgt_trials_c) },
+    nps_c:        { label:'NPs (Conteúdo)',          real:S.dc.nc,  tgt:gM(CM.tgt_nps_c) },
+    nss_c:        { label:'NSs (Conteúdo)',          real:S.dc.sc,  tgt:gM(CM.tgt_nss_c) },
+    parceiros:    { label:'Parceiros na carteira',   real:parc,     tgt:gM(CM.tgt_parceiros) },
+    sessoes:      { label:'Sessões (Conteúdo)',      real:sess,     tgt:gM(CM.tgt_sessoes) },
+    cadastrados:  { label:'Cadastrados (Padrão)',    real:cadas,    tgt:gM(CM.tgt_cadastrados) },
+    comissionados:{ label:'Comissionados acumulado', real:comiss,   tgt:gM(CM.tgt_comissionados) },
+    trials_p:     { label:'Trials (Padrão)',         real:S.dc.tp,  tgt:gM(CM.tgt_trials_p) },
+    nps_p:        { label:'NPs (Padrão)',            real:S.dc.np,  tgt:gM(CM.tgt_nps_p) },
+    nss_p:        { label:'NSs (Padrão)',            real:S.dc.sp,  tgt:gM(CM.tgt_nss_p) },
+  };
+
+  // CVR targets: calculados a partir dos targets de funil
+  S.tgt.mnc = semNums.map(s => {
+    const r = metaMap[s]; if(!r) return null;
+    return pct(num(r[CM.tgt_nps_c]), num(r[CM.tgt_trials_c]));
+  });
+  S.tgt.msc = semNums.map(s => {
+    const r = metaMap[s]; if(!r) return null;
+    return pct(num(r[CM.tgt_nss_c]), num(r[CM.tgt_nps_c]));
+  });
+  S.tgt.mnp = semNums.map(s => {
+    const r = metaMap[s]; if(!r) return null;
+    return pct(num(r[CM.tgt_nps_p]), num(r[CM.tgt_trials_p]));
+  });
+  S.tgt.msp = semNums.map(s => {
+    const r = metaMap[s]; if(!r) return null;
+    return pct(num(r[CM.tgt_nss_p]), num(r[CM.tgt_nps_p]));
+  });
+
+  S.loaded = true;
+}
+
+/* ── FALLBACK ── */
+function loadFallback() {
+  const WK=['S1 Jan','S2 Jan','S3 Jan','S4 Jan','S5 Jan','S6 Fev','S7 Fev','S8 Fev','S9 Fev','S10 Mar','S11 Mar','S12 Mar','S13 Mar','S14 Mar','S15 Abr','S16 Abr','S17 Abr'];
+  S.weeks=WK;
+  S.dc={tc:[201,740,790,684,506,548,489,480,496,433,448,396,360,309,417,387,415],nc:[32,113,122,127,96,94,86,69,74,92,100,73,69,68,107,73,89],sc:[5,12,10,9,17,14,13,7,10,15,13,14,9,11,13,14,8],tp:[346,332,480,351,287,240,464,514,594,621,532,588,562,348,289,391,636],np:[56,72,70,66,60,43,49,52,116,106,79,114,100,98,81,84,105],sp:[8,13,11,16,13,14,8,14,23,18,19,23,6,16,18,10,17]};
+  S.kpis={
+    trials_c:    {label:'Trials (Conteúdo)',      real:S.dc.tc,tgt:[433,433,433,433,433,519,519,519,519,433,433,433,433,520,586,586,586]},
+    nps_c:       {label:'NPs (Conteúdo)',          real:S.dc.nc,tgt:[95,95,95,95,95,107,107,107,107,95,95,95,95,118,135,135,135]},
+    nss_c:       {label:'NSs (Conteúdo)',          real:S.dc.sc,tgt:[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null]},
+    parceiros:   {label:'Parceiros na carteira',   real:[16,16,16,16,16,16,18,17,19,19,20,22,24,24,26,27,27],tgt:[16,16,16,16,16,12,12,12,12,21,21,21,21,21,37,37,37]},
+    sessoes:     {label:'Sessões (Conteúdo)',      real:[995,3798,7768,7392,5854,6352,5645,5247,5709,5384,3953,3360,3162,2744,2512,2935,2206],tgt:[528,528,528,528,528,714,714,714,714,700,700,700,700,700,926,926,926]},
+    cadastrados: {label:'Cadastrados (Padrão)',    real:[298,348,356,354,361,319,313,444,427,439,508,635,656,416,448,439,376],tgt:[31,31,31,31,31,245,245,245,245,109,109,109,109,99,91,91,91]},
+    comissionados:{label:'Comissionados acumulado',real:[35,82,130,174,49,88,124,160,51,51,109,133,158,212,56,96,136],tgt:[null,null,null,null,null,null,null,null,null,68,135,203,271,300,79,158,236]},
+    trials_p:    {label:'Trials (Padrão)',         real:S.dc.tp,tgt:[500,500,500,500,500,500,500,500,500,500,500,500,500,601,677,677,677]},
+    nps_p:       {label:'NPs (Padrão)',            real:S.dc.np,tgt:[119,119,119,119,119,150,150,150,150,119,119,119,119,147,169,169,169]},
+    nss_p:       {label:'NSs (Padrão)',            real:S.dc.sp,tgt:[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null]},
+  };
+  S.tgt={mnc:[21.97,21.97,21.97,21.97,21.97,21.97,21.97,21.97,21.97,21.97,21.97,21.97,21.97,22.61,22.96,22.96,22.96],msc:[20.2,20.2,20.2,20.2,20.2,20.2,20.2,20.2,20.2,20.2,20.2,20.2,20.2,19.7,19.5,19.5,19.5],mnp:[23.86,23.86,23.86,23.86,23.86,23.86,23.86,23.86,23.86,23.86,23.86,23.86,23.86,24.53,24.90,24.90,24.90],msp:[22.7,22.7,22.7,22.7,22.7,22.7,22.7,22.7,22.7,22.7,22.7,22.7,22.7,20.1,18.7,18.7,18.7]};
+  S.loaded=true;
+  renderAll();
+}
+
+/* ── CHART HELPERS ── */
+const bOpts = () => ({
+  responsive:true, maintainAspectRatio:false,
+  plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const v=c.raw;if(v==null)return'';return c.dataset.label+': '+Math.round(v).toLocaleString('pt-BR');}}}},
+  scales:{
+    x:{grid:{display:false},ticks:{font:{size:9},autoSkip:true,maxTicksLimit:10,maxRotation:45}},
+    y:{grid:{color:'rgba(0,0,0,0.06)'},ticks:{font:{size:9},callback:v=>Math.round(v).toLocaleString('pt-BR')}}
+  }
+});
+
+function setTT(n){ttab=n;document.querySelectorAll('#ttabs button').forEach((b,i)=>b.classList.toggle('on',i===n-1));if(S.loaded)renderTracker();}
+document.getElementById('kpiSel').addEventListener('change',()=>{if(S.loaded)renderTracker();});
+function renderAll(){renderTracker();renderFunnel();renderCVR();renderCohort();}
+
+/* ── TRACKER ── */
+function renderTracker(){
+  const kpi=document.getElementById('kpiSel').value;
+  const d=S.kpis[kpi], N=S.weeks.length, SH=S.weeks.map(w=>w.split(' ')[0]);
+  const aR=cumsum(d.real), aT=cumsum(d.tgt);
+  // Find last week with real data
+  let last=N-1;
+  while(last>0 && d.real[last]==null) last--;
+  const r=d.real[last], t=d.tgt[last], ar=aR[last], at=aT[last];
+  const prev=last>0?d.real[last-1]:null;
+  const wow=pct(r,prev), dm=pct(r,t), da=pct(ar,at);
+  const cls=v=>v==null?'neu':v>=0?'pos':'neg';
+
+  document.getElementById('cards').innerHTML=`
+    <div class="mc"><div class="mc-l">Real ${S.weeks[last]}</div><div class="mc-v">${fmt(r)}</div><div class="mc-s ${cls(dm)}">${dm!=null?(dm>=0?'▲ ':'▼ ')+Math.abs(dm).toFixed(1)+'% vs meta':''}</div></div>
+    <div class="mc"><div class="mc-l">Meta ${S.weeks[last]}</div><div class="mc-v">${fmt(t)}</div></div>
+    <div class="mc"><div class="mc-l">WoW vs ${last>0?S.weeks[last-1]:'—'}</div><div class="mc-v ${cls(wow)}">${wow!=null?(wow>=0?'▲ ':'▼ ')+Math.abs(wow).toFixed(1)+'%':'—'}</div></div>
+    <div class="mc"><div class="mc-l">Acumulado real</div><div class="mc-v">${fmt(ar)}</div><div class="mc-s ${cls(da)}">${da!=null?(da>=0?'▲ ':'▼ ')+Math.abs(da).toFixed(1)+'% vs meta':''}</div></div>`;
+
+  if(CH.t) CH.t.destroy();
+
+  if(ttab===1){
+    document.getElementById('tlbl').textContent=d.label+' — real vs meta por semana';
+    document.getElementById('tleg').innerHTML=`<span><span class="dot" style="background:#1D9E75"></span>Real</span><span><span class="dot" style="background:rgba(55,138,221,0.35);border:1px solid #378ADD"></span>Meta</span>`;
+    CH.t=new Chart(document.getElementById('tc'),{type:'bar',data:{labels:SH,datasets:[
+      {label:'Meta',data:d.tgt,backgroundColor:'rgba(55,138,221,0.18)',borderColor:'#378ADD',borderWidth:1,borderRadius:3,order:2},
+      {label:'Real',data:d.real,backgroundColor:'rgba(29,158,117,0.85)',borderWidth:0,borderRadius:3,order:1}
+    ]},options:bOpts()});
+    let rows='';
+    for(let i=0;i<N;i++){if(d.real[i]==null&&d.tgt[i]==null)continue;const dm2=pct(d.real[i],d.tgt[i]);rows+=`<tr><td>${S.weeks[i]}</td><td>${fmt(d.real[i])}</td><td>${fmt(d.tgt[i])}</td><td>${pill(dm2)}</td></tr>`;}
+    document.getElementById('ttbl').innerHTML=`<thead><tr><th style="text-align:left">Semana</th><th>Real</th><th>Meta</th><th>Δ Meta</th></tr></thead><tbody>${rows}</tbody>`;
+
+  } else if(ttab===2){
+    const wa=d.real.map((v,i)=>i===0?null:pct(v,d.real[i-1]));
+    document.getElementById('tlbl').textContent=d.label+' — variação WoW %';
+    document.getElementById('tleg').innerHTML=`<span><span class="dot" style="background:#1D9E75"></span>Alta</span><span><span class="dot" style="background:#D85A30"></span>Queda</span>`;
+    CH.t=new Chart(document.getElementById('tc'),{type:'bar',data:{labels:SH,datasets:[
+      {label:'WoW%',data:wa,backgroundColor:wa.map(v=>v==null?'transparent':v>=0?'rgba(29,158,117,0.82)':'rgba(216,90,48,0.82)'),borderWidth:0,borderRadius:3}
+    ]},options:{...bOpts(),scales:{x:{grid:{display:false},ticks:{font:{size:9},autoSkip:false,maxRotation:45}},y:{grid:{color:'rgba(0,0,0,0.06)'},ticks:{font:{size:9},callback:v=>v.toFixed(0)+'%'},afterDataLimits:a=>{const m=Math.max(Math.abs(a.min),Math.abs(a.max));a.min=-m*1.1;a.max=m*1.1;}}}}});
+    let rows='';
+    for(let i=0;i<N;i++){if(d.real[i]==null)continue;const w=i>0?pct(d.real[i],d.real[i-1]):null;const ab=i>0&&d.real[i]!=null&&d.real[i-1]!=null?d.real[i]-d.real[i-1]:null;rows+=`<tr><td>${S.weeks[i]}</td><td>${fmt(d.real[i])}</td><td>${i>0?fmt(d.real[i-1]):'—'}</td><td>${ab!=null?(ab>=0?'+':'')+fmt(ab):'—'}</td><td>${pill(w)}</td></tr>`;}
+    document.getElementById('ttbl').innerHTML=`<thead><tr><th style="text-align:left">Semana</th><th>Real</th><th>Sem. ant.</th><th>Δ abs.</th><th>WoW%</th></tr></thead><tbody>${rows}</tbody>`;
+
+  } else {
+    document.getElementById('tlbl').textContent=d.label+' — acumulado real vs meta';
+    document.getElementById('tleg').innerHTML=`<span><span class="dot" style="background:#1D9E75"></span>Acum. Real</span><span><span class="dot" style="background:rgba(55,138,221,0.3);border:1px dashed #378ADD"></span>Acum. Meta</span>`;
+    CH.t=new Chart(document.getElementById('tc'),{type:'line',data:{labels:SH,datasets:[
+      {label:'Acum. Meta',data:aT,borderColor:'#378ADD',borderDash:[4,3],borderWidth:1.5,pointRadius:2,fill:false,tension:.35,order:2},
+      {label:'Acum. Real',data:aR,borderColor:'#1D9E75',borderWidth:2.5,pointRadius:3,pointBackgroundColor:'#1D9E75',fill:false,tension:.35,order:1}
+    ]},options:bOpts()});
+    let rows='';
+    for(let i=0;i<N;i++){if(aR[i]==null&&aT[i]==null)continue;const da2=pct(aR[i],aT[i]);rows+=`<tr><td>${S.weeks[i]}</td><td>${fmt(d.real[i])}</td><td>${fmt(aR[i])}</td><td>${fmt(aT[i])}</td><td>${pill(da2)}</td></tr>`;}
+    document.getElementById('ttbl').innerHTML=`<thead><tr><th style="text-align:left">Semana</th><th>Real sem.</th><th>Acum. Real</th><th>Acum. Meta</th><th>Δ Acum.</th></tr></thead><tbody>${rows}</tbody>`;
+  }
+}
+
+/* ── FUNIL ── */
+function renderFunnel(){
+  const SH=S.weeks.map(w=>w.split(' ')[0]);
+  const fo={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmt(c.raw)}}},scales:{x:{grid:{display:false},ticks:{font:{size:9},autoSkip:true,maxTicksLimit:9,maxRotation:45}},y:{grid:{color:'rgba(0,0,0,0.06)'},ticks:{font:{size:9},callback:v=>Math.round(v).toLocaleString('pt-BR')}}}};
+  if(CH.fC)CH.fC.destroy(); if(CH.fP)CH.fP.destroy();
+  CH.fC=new Chart(document.getElementById('fC'),{type:'bar',data:{labels:SH,datasets:[
+    {label:'Trials',data:S.dc.tc,backgroundColor:'rgba(96,180,240,0.72)',borderRadius:3,borderWidth:0},
+    {label:'NPs',  data:S.dc.nc,backgroundColor:'rgba(29,158,117,0.87)',borderRadius:3,borderWidth:0},
+    {label:'NSs',  data:S.dc.sc,backgroundColor:'rgba(232,168,56,0.87)',borderRadius:3,borderWidth:0},
+  ]},options:fo});
+  CH.fP=new Chart(document.getElementById('fP'),{type:'bar',data:{labels:SH,datasets:[
+    {label:'Trials',data:S.dc.tp,backgroundColor:'rgba(96,180,240,0.72)',borderRadius:3,borderWidth:0},
+    {label:'NPs',  data:S.dc.np,backgroundColor:'rgba(29,158,117,0.87)',borderRadius:3,borderWidth:0},
+    {label:'NSs',  data:S.dc.sp,backgroundColor:'rgba(232,168,56,0.87)',borderRadius:3,borderWidth:0},
+  ]},options:fo});
+}
+
+/* ── CVR ── */
+function renderCVR(){
+  const SH=S.weeks.map(w=>w.split(' ')[0]), N=S.weeks.length;
+  const co={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+': '+fP(c.raw)}}},scales:{x:{grid:{display:false},ticks:{font:{size:9},autoSkip:true,maxTicksLimit:9,maxRotation:45}},y:{grid:{color:'rgba(0,0,0,0.06)'},ticks:{font:{size:9},callback:v=>v.toFixed(0)+'%'},min:0,max:50}}};
+  const cNpC=S.dc.tc.map((t,i)=>pct(S.dc.nc[i],t));
+  const cNsC=S.dc.nc.map((n,i)=>pct(S.dc.sc[i],n));
+  const cNpP=S.dc.tp.map((t,i)=>pct(S.dc.np[i],t));
+  const cNsP=S.dc.np.map((n,i)=>pct(S.dc.sp[i],n));
+  if(CH.cC)CH.cC.destroy(); if(CH.cP)CH.cP.destroy();
+  CH.cC=new Chart(document.getElementById('cC'),{type:'line',data:{labels:SH,datasets:[
+    {label:'Meta T→NP', data:S.tgt.mnc,borderColor:'rgba(29,158,117,0.3)',borderDash:[4,3],borderWidth:1.5,pointRadius:0,fill:false,tension:.3},
+    {label:'Meta NP→NS',data:S.tgt.msc,borderColor:'rgba(232,168,56,0.3)',borderDash:[4,3],borderWidth:1.5,pointRadius:0,fill:false,tension:.3},
+    {label:'CVR T→NP',  data:cNpC,borderColor:'#1D9E75',borderWidth:2,pointRadius:3,pointBackgroundColor:'#1D9E75',fill:false,tension:.3},
+    {label:'CVR NP→NS', data:cNsC,borderColor:'#E8A838',borderWidth:2,pointRadius:3,pointBackgroundColor:'#E8A838',fill:false,tension:.3},
+  ]},options:co});
+  CH.cP=new Chart(document.getElementById('cP'),{type:'line',data:{labels:SH,datasets:[
+    {label:'Meta T→NP', data:S.tgt.mnp,borderColor:'rgba(29,158,117,0.3)',borderDash:[4,3],borderWidth:1.5,pointRadius:0,fill:false,tension:.3},
+    {label:'Meta NP→NS',data:S.tgt.msp,borderColor:'rgba(232,168,56,0.3)',borderDash:[4,3],borderWidth:1.5,pointRadius:0,fill:false,tension:.3},
+    {label:'CVR T→NP',  data:cNpP,borderColor:'#1D9E75',borderWidth:2,pointRadius:3,pointBackgroundColor:'#1D9E75',fill:false,tension:.3},
+    {label:'CVR NP→NS', data:cNsP,borderColor:'#E8A838',borderWidth:2,pointRadius:3,pointBackgroundColor:'#E8A838',fill:false,tension:.3},
+  ]},options:co});
+  let rows='';
+  for(let i=0;i<N;i++){
+    if(S.dc.tc[i]==null&&S.dc.tp[i]==null) continue;
+    const dnc=cNpC[i]!=null&&S.tgt.mnc[i]!=null?cNpC[i]-S.tgt.mnc[i]:null;
+    const dsc=cNsC[i]!=null&&S.tgt.msc[i]!=null?cNsC[i]-S.tgt.msc[i]:null;
+    const dnp=cNpP[i]!=null&&S.tgt.mnp[i]!=null?cNpP[i]-S.tgt.mnp[i]:null;
+    const dsp=cNsP[i]!=null&&S.tgt.msp[i]!=null?cNsP[i]-S.tgt.msp[i]:null;
+    rows+=`<tr>
+      <td>${S.weeks[i]}</td>
+      <td>${fmt(S.dc.tc[i])}</td><td>${fmt(S.dc.nc[i])}</td><td>${fmt(S.dc.sc[i])}</td>
+      <td class="${dc(dnc)}">${fP(cNpC[i])}</td><td>${pill(dnc,'pp')}</td>
+      <td class="${dc(dsc)}">${fP(cNsC[i])}</td><td>${pill(dsc,'pp')}</td>
+      <td style="border-left:2px solid #e8e6df">${fmt(S.dc.tp[i])}</td><td>${fmt(S.dc.np[i])}</td><td>${fmt(S.dc.sp[i])}</td>
+      <td class="${dc(dnp)}">${fP(cNpP[i])}</td><td>${pill(dnp,'pp')}</td>
+      <td class="${dc(dsp)}">${fP(cNsP[i])}</td><td>${pill(dsp,'pp')}</td>
+    </tr>`;
+  }
+  document.getElementById('ftbl').innerHTML=`<thead>
+    <tr><th rowspan="2" style="text-align:left">Semana</th>
+      <th colspan="7" style="text-align:center">Conteúdo</th>
+      <th colspan="7" style="text-align:center;border-left:2px solid #e8e6df">Padrão</th></tr>
+    <tr><th>Trials</th><th>NPs</th><th>NSs</th><th>CVR→NP</th><th>Δ pp</th><th>CVR→NS</th><th>Δ pp</th>
+    <th style="border-left:2px solid #e8e6df">Trials</th><th>NPs</th><th>NSs</th><th>CVR→NP</th><th>Δ pp</th><th>CVR→NS</th><th>Δ pp</th></tr>
+  </thead><tbody>${rows}</tbody>`;
+}
+
+/* ── COHORT ── */
+function renderCohort(){
+  const N=S.weeks.length;
+  function build(trials,nps,nss){
+    const cnp=[],cns=[];
+    for(let i=0;i<N;i++){
+      const rNP=[],rNS=[];let aN=0,aS=0;
+      for(let j=0;j<N-i&&j<5;j++){aN+=nps[i+j]||0;aS+=nss[i+j]||0;rNP.push(trials[i]>0?aN/trials[i]*100:null);rNS.push(trials[i]>0?aS/trials[i]*100:null);}
+      cnp.push(rNP);cns.push(rNS);
+    }return{cnp,cns};
+  }
+  function hcls(v){if(v==null)return'';if(v>=40)return'h5';if(v>=30)return'h4';if(v>=20)return'h3';if(v>=15)return'h2';if(v>=10)return'h1';return'h0';}
+  function renderT(id,trials,cnp,cns){
+    let h='<tr><th>Entrada</th><th>Trials</th>';
+    for(let j=0;j<5;j++)h+=`<th>+${j} sem</th>`;
+    h+='</tr>';
+    let rows='';
+    for(let i=0;i<N;i++){
+      if(trials[i]==null)continue;
+      rows+=`<tr><td class="wl">${S.weeks[i]}</td><td>${fmt(trials[i])}</td>`;
+      for(let j=0;j<5;j++){
+        if(j<cnp[i].length){const np=cnp[i][j],ns=cns[i][j];rows+=`<td class="${hcls(np)}">${np!=null?np.toFixed(1)+'%':'—'}<br><span style="font-size:10px;opacity:.75">${ns!=null?ns.toFixed(1)+'%':'—'}</span></td>`;}
+        else rows+=`<td style="opacity:.2">—</td>`;
+      }
+      rows+='</tr>';
+    }
+    document.getElementById(id).innerHTML=`<thead>${h}</thead><tbody>${rows}</tbody>`;
+  }
+  const{cnp:cnpC,cns:cnsC}=build(S.dc.tc,S.dc.nc,S.dc.sc);
+  const{cnp:cnpP,cns:cnsP}=build(S.dc.tp,S.dc.np,S.dc.sp);
+  renderT('coC',S.dc.tc,cnpC,cnsC);
+  renderT('coP',S.dc.tp,cnpP,cnsP);
+}
+
+if(AUTO_REFRESH_MIN>0) setInterval(loadData, AUTO_REFRESH_MIN*60*1000);
+loadData();
+</script>
+</body>
+</html>
